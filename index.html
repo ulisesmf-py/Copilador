@@ -45,7 +45,7 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 /* ── Sections ── */
 .sections{padding:0 20px 28px;max-width:880px;margin:0 auto;}
 .section{display:none;}
-.section.active{display:block;}
+.section.active{display:block !important;visibility:visible !important;opacity:1 !important;}
 
 /* ── Cards ── */
 .card{background:linear-gradient(145deg,rgba(15,23,41,0.95),rgba(11,17,33,0.98));border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;margin-bottom:.75rem;box-shadow:0 2px 16px rgba(0,0,0,0.25);}
@@ -297,7 +297,7 @@ input[type="date"]{color-scheme:dark;}
   </div>
   <div class="topbar-divider"></div>
   <span class="topbar-logo"><i class="ti ti-terminal-2"></i> Informatica II</span>
-  <span class="topbar-parcial" id="topbar-parcial">Cargando...</span>
+  <span class="topbar-parcial" id="topbar-parcial">1er Parcial</span>
   <span class="saving-ind" id="saving-ind"><i class="ti ti-cloud-upload"></i> Guardando...</span>
 </div>
 
@@ -320,11 +320,57 @@ input[type="date"]{color-scheme:dark;}
 <!-- Content -->
 <div class="sections">
   <div class="section active" id="students-section">
-    <div id="stu-login"></div>
+    <div id="stu-login" style="display:block;">
+      <div class="login-wrap">
+        <div class="login-box">
+          <div class="login-icon"><i class="ti ti-terminal-2"></i></div>
+          <h2>// Acceso Alumno</h2>
+          <p>Ingresa tu matrícula y selecciona tu nombre.</p>
+          <div class="form-group">
+            <label>Matrícula</label>
+            <input id="stu-mat" type="text" placeholder="Ej: 262016420" maxlength="12" style="letter-spacing:.05em;">
+          </div>
+          <div class="form-group">
+            <label>Nombre</label>
+            <select id="stu-sel">
+              <option value="">— Selecciona tu nombre —</option>
+              <option value="262016420">CASTRO ROSAS AMERICA NASLIRANI</option>
+              <option value="263046700">GARCIA CASAS EVANY TADEO</option>
+              <option value="262116190">GODINEZ REYES PAOLA NATALI</option>
+              <option value="262116208">GUERRERO GARCIA KARLA MELANY</option>
+              <option value="261065103">LOPEZ MARTINEZ MARTHA REBECA</option>
+              <option value="263036573">PEREZ FLORES BRANDON GAEL</option>
+              <option value="262126256">SALAZAR CARDENAS LESLY VALERIA</option>
+              <option value="263046697">SANCHEZ AVILA IVAN EDAHI</option>
+              <option value="262016326">VELEZ SANCHEZ ANGIE DANIELA</option>
+            </select>
+          </div>
+          <label class="checkbox-row"><input type="checkbox" id="stu-rem"> Recordar sesión</label>
+          <button class="btn btn-primary btn-full" onclick="doLogin()"><i class="ti ti-login"></i> Entrar</button>
+        </div>
+      </div>
+    </div>
     <div id="stu-dash" style="display:none;"></div>
   </div>
   <div class="section" id="teacher-section">
-    <div id="tea-login"></div>
+    <div id="tea-login">
+      <div class="login-wrap">
+        <div class="login-box">
+          <div class="login-icon" style="background:linear-gradient(135deg,#2d1b69,#1a0f3c);">
+            <i class="ti ti-shield-lock" style="color:#a78bfa;"></i>
+          </div>
+          <h2>// Acceso Profesor</h2>
+          <p>Gestiona calificaciones, asistencia, foro y configuración del curso.</p>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input id="tea-pwd" type="password" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doTeacherLogin()">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="doTeacherLogin()" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;">
+            <i class="ti ti-login"></i> Entrar
+          </button>
+        </div>
+      </div>
+    </div>
     <div id="tea-panel" style="display:none;"></div>
   </div>
 </div>
@@ -401,17 +447,21 @@ async function saveAll(){
 }
 
 async function loadAll(){
+  const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),6000));
   try{
-    const snap=await get(ref(db,PATH));
+    const snap=await Promise.race([get(ref(db,PATH)),timeout]);
     if(snap.exists()){
       const d=snap.val();
       questions=d.questions||[];replies=d.replies||{};grades=d.grades||{};
       attendance=d.attendance||{};sessions=d.sessions||{};codeSubmissions=d.codeSubmissions||{};
       if(d.config)config={...config,...d.config};
-    if(config.activeSession===undefined)config.activeSession=null;
+      if(config.activeSession===undefined)config.activeSession=null;
     }
     if(config.criteria?.length)CRITERIA=config.criteria;
-  }catch(e){console.warn('Firebase load:',e);}
+  }catch(e){
+    console.warn('Firebase load:',e.message);
+    // App works offline — grades/sessions will be empty until reconnected
+  }
   _fbReady=true;
   updateTopbar();
 }
@@ -465,7 +515,7 @@ function calcCriteriaGrade(mat,key,freq,pkey){
   const g=grades[mat]?.[pkey]?.[key];
   if(freq==='semana'||freq==='actividad'){
     if(!g||typeof g!=='object')return null;
-    const vals=Object.values(g).map(v=>parseFloat(v)).filter(v=>!isNaN(v)&&v>=0);
+    const vals=Object.values(g).map(v=>parseFloat(v)).filter(v=>!isNaN(v)&&v>=0&&v!==null);
     return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
   }
   const v=parseFloat(g);return isNaN(v)?null:v;
@@ -526,35 +576,33 @@ window.showTab=function(name){
 // STUDENT AUTH
 // ════════════════════════════════════════
 function showStudentLogin(){
-  document.getElementById('stu-login').style.display='block';
-  document.getElementById('stu-dash').style.display='none';
-  const saved=localStorage.getItem('inf2v2-student');
-  const pf=saved?JSON.parse(saved):null;
-  document.getElementById('stu-login').innerHTML=`
-    <div class="login-wrap"><div class="login-box fade-up">
-      <div class="login-icon"><i class="ti ti-terminal-2"></i></div>
-      <h2>// Acceso Alumno</h2>
-      <p>Ingresa tu matrícula y selecciona tu nombre.</p>
-      <div class="form-group"><label>Matrícula</label>
-        <input id="stu-mat" type="text" placeholder="Número de matrícula" value="${pf?pf.mat:''}">
-      </div>
-      <div class="form-group"><label>Nombre</label>
-        <select id="stu-sel">
-          <option value="">— Selecciona —</option>
-          ${ROSTER.map(r=>`<option value="${r.mat}" ${pf&&pf.mat===r.mat?'selected':''}>${r.name}</option>`).join('')}
-        </select>
-      </div>
-      <label class="checkbox-row"><input type="checkbox" id="stu-rem" ${pf?'checked':''}> Recordar sesión</label>
-      <button class="btn btn-primary btn-full" onclick="doLogin()"><i class="ti ti-login"></i> Entrar</button>
-    </div></div>`;
+  const loginEl=document.getElementById('stu-login');
+  const dashEl=document.getElementById('stu-dash');
+  if(loginEl)loginEl.style.display='block';
+  if(dashEl)dashEl.style.display='none';
+  // Restore saved session values from localStorage
+  try{
+    const saved=localStorage.getItem('inf2v2-student');
+    if(saved){
+      const pf=JSON.parse(saved);
+      const matEl=document.getElementById('stu-mat');
+      const selEl=document.getElementById('stu-sel');
+      const remEl=document.getElementById('stu-rem');
+      if(matEl&&pf.mat)matEl.value=pf.mat;
+      if(selEl&&pf.mat)selEl.value=pf.mat;
+      if(remEl)remEl.checked=true;
+    }
+  }catch(e){localStorage.removeItem('inf2v2-student');}
 }
 
 window.doLogin=function(){
   const mat=(document.getElementById('stu-mat')?.value||'').trim();
   const sel=document.getElementById('stu-sel')?.value||'';
   const rem=document.getElementById('stu-rem')?.checked;
+  if(!sel){toast('Selecciona tu nombre del listado');return;}
+  if(!mat){toast('Ingresa tu matrícula');return;}
   const student=ROSTER.find(r=>r.mat===mat&&r.mat===sel);
-  if(!student){toast('Matrícula o nombre incorrecto');return;}
+  if(!student){toast('Matrícula y nombre no coinciden. Verifica tus datos.');return;}
   currentStudent=student;
   viewingParcial=config.activePeriod;
   studentTab='inicio';
@@ -585,22 +633,13 @@ function showStudentDash(){
 // TEACHER AUTH
 // ════════════════════════════════════════
 function showTeacherLogin(){
-  document.getElementById('tea-login').style.display='block';
-  document.getElementById('tea-panel').style.display='none';
-  document.getElementById('tea-login').innerHTML=`
-    <div class="login-wrap"><div class="login-box fade-up">
-      <div class="login-icon" style="background:linear-gradient(135deg,#2d1b69,#1a0f3c);">
-        <i class="ti ti-shield-lock" style="color:#a78bfa;"></i>
-      </div>
-      <h2>// Acceso Profesor</h2>
-      <p>Gestiona calificaciones, asistencia, foro y configuración del curso.</p>
-      <div class="form-group"><label>Contraseña</label>
-        <input id="tea-pwd" type="password" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doTeacherLogin()">
-      </div>
-      <button class="btn btn-primary btn-full" onclick="doTeacherLogin()" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;">
-        <i class="ti ti-login"></i> Entrar
-      </button>
-    </div></div>`;
+  const tl=document.getElementById('tea-login');
+  const tp=document.getElementById('tea-panel');
+  if(tl)tl.style.display='block';
+  if(tp)tp.style.display='none';
+  // Clear password field
+  const pwd=document.getElementById('tea-pwd');
+  if(pwd)pwd.value='';
 }
 
 window.doTeacherLogin=function(){
@@ -695,21 +734,22 @@ function renderStudentDashboard(){
     const bgColor=g===null?'rgba(74,90,122,0.08)':g>=9?'rgba(0,255,136,0.07)':g>=7?'rgba(255,170,0,0.07)':'rgba(255,68,68,0.07)';
     const borderColor=g===null?'rgba(74,90,122,0.2)':g>=9?'rgba(0,255,136,0.25)':g>=7?'rgba(255,170,0,0.25)':'rgba(255,68,68,0.25)';
     let sessDetail='';
-    if(c.freq==='semana'||c.freq==='actividad'){
+    if(c.freq==='actividad'){
+      // Only show entries from graded submitted codes, numbered 1,2,3...
+      const cg=grades[mat]?.[vp]?.[c.key]||{};
+      const entries=Object.entries(cg).filter(([,v])=>!isNaN(parseFloat(v)));
+      if(entries.length){
+        sessDetail=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">${entries.map(([,v],gi)=>{const nv=parseFloat(v);return`<div style="text-align:center;"><div style="font-size:12px;color:var(--text3);margin-bottom:2px;font-weight:700;">${gi+1}</div><div style="width:44px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:${nv>=9?'rgba(0,255,136,0.15)':nv>=7?'rgba(255,170,0,0.15)':'rgba(255,68,68,0.15)'};color:${nv>=9?'var(--green)':nv>=7?'var(--amber)':'var(--red)'};">${nv.toFixed(1)}</div></div>`;}).join('')}</div>`;
+      }
+    }
+    if(c.freq==='semana'){
       const cg=grades[mat]?.[vp]?.[c.key]||{};
       const sess=getSessions(vp);
       if(sess.length){
         const filled=sess.filter(s=>!isNaN(parseFloat(cg[s.id]))).length;
-        sessDetail=`<div style="margin-top:8px;">
-          <div style="display:flex;justify-content:space-between;font-size:17px;color:var(--text3);margin-bottom:5px;">
-            <span>${filled}/${sess.length} sesiones evaluadas</span>
-            <span style="color:${gColor};font-weight:700;">${g!==null?'Promedio: '+g.toFixed(1):''}</span>
-          </div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">${sess.map((s,si)=>{const v=parseFloat(cg[s.id]);const hasV=!isNaN(v);return`<div style="text-align:center;"><div style="font-size:11px;color:var(--text3);margin-bottom:2px;font-weight:700;" title="${esc(s.label)}">${si+1}</div><div style="width:44px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;background:${hasV?(v>=9?'rgba(0,255,136,0.15)':v>=7?'rgba(255,170,0,0.15)':'rgba(255,68,68,0.15)'):'var(--surface3)'};color:${hasV?(v>=9?'var(--green)':v>=7?'var(--amber)':'var(--red)'):'var(--text3)'};">${hasV?v.toFixed(1):'—'}</div></div>`;}).join('')}</div>
-        </div>`;
+        sessDetail=`<div style="margin-top:8px;"><div style="font-size:13px;color:var(--text3);margin-bottom:5px;">${filled}/${sess.length} sesiones</div><div style="display:flex;gap:4px;flex-wrap:wrap;">${sess.map((s,si)=>{const v=parseFloat(cg[s.id]);const hasV=!isNaN(v);return`<div style="text-align:center;"><div style="font-size:11px;color:var(--text3);margin-bottom:2px;font-weight:700;">${si+1}</div><div style="width:44px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:${hasV?(v>=9?'rgba(0,255,136,0.15)':v>=7?'rgba(255,170,0,0.15)':'rgba(255,68,68,0.15)'):'var(--surface3)'};color:${hasV?(v>=9?'var(--green)':v>=7?'var(--amber)':'var(--red)'):'var(--text3)'};">${hasV?v.toFixed(1):'—'}</div></div>`;}).join('')}</div></div>`;
       }
-    }
-    return`<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;">
+    }    return`<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;">
       <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:42px;font-weight:900;color:${gColor};opacity:0.08;line-height:1;">${g!==null?g.toFixed(0):'?'}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="flex:1;">
@@ -1103,19 +1143,29 @@ clase:`class Animal:\n    def __init__(self, nombre, sonido):\n        self.nomb
 function buildEditor(mountId,lang,filename,version){
   const isCpp=lang==='cpp';
   const EX=isCpp?CPP_EX:PY_EX;
-  const exList=isCpp?[['hola','Hola Mundo'],['variables','Variables'],['condicional','if/else'],['bucle','for'],['mientras','while'],['funcion','Funciones'],['array','Arrays'],['cin','cin >>'],['switch','switch'],['dowhile','do-while']]:[['hola','Hola Mundo'],['variables','Variables'],['condicional','if/elif'],['bucle','for range'],['mientras','while'],['funcion','Funciones'],['lista','Listas'],['diccionario','Dict'],['input_','input()'],['clase','Clases']];
+  const exList=isCpp
+    ?[['hola','Hola Mundo'],['variables','Variables'],['condicional','if/else'],['bucle','for'],['mientras','while'],['funcion','Funciones'],['array','Arrays'],['cin','cin >>'],['switch','switch'],['dowhile','do-while']]
+    :[['hola','Hola Mundo'],['variables','Variables'],['condicional','if/elif'],['bucle','for range'],['mientras','while'],['funcion','Funciones'],['lista','Listas'],['diccionario','Dict'],['input_','input()'],['clase','Clases']];
   const chips=exList.map(([k,l])=>`<span class="chip" data-key="${k}">${isCpp?'// ':'# '}${l}</span>`).join('');
   const mount=document.getElementById(mountId);if(!mount)return;
-  const saved=localStorage.getItem('code_bk_'+mountId);
-  const savedName=localStorage.getItem('code_nm_'+mountId)||'';
+
+  // ── Per-student localStorage key (prevents cross-student contamination) ──
+  function lsKey(type){
+    const mat=currentStudent?.mat||'guest';
+    return `code_${type}_${mountId}_${mat}`;
+  }
+  const savedCode=localStorage.getItem(lsKey('bk'))||EX.hola;
+  const savedName=localStorage.getItem(lsKey('nm'))||'';
+
   mount.innerHTML=`
   <div class="card fade-up" style="margin-bottom:1rem;">
     <div class="panel-title"><i class="ti ti-${isCpp?'brand-cpp':'brand-python'}"></i> ${isCpp?'Compilador C++':'Intérprete Python'} · Professional</div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
-      <input id="proj-nm-${mountId}" type="text" value="${esc(savedName)}" placeholder="Nombre del proyecto..." style="flex:1;min-width:150px;padding:6px 10px;font-size:17px;background:#1a1a2e;border:1px solid rgba(0,180,255,.2);border-radius:6px;color:var(--text);font-family:var(--font);">
+      <input id="proj-nm-${mountId}" type="text" value="${esc(savedName)}" placeholder="Nombre del proyecto..."
+        style="flex:1;min-width:150px;padding:7px 12px;font-size:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--text);font-family:var(--font);outline:none;">
       <button id="btn-copy-${mountId}" class="clear-btn" title="Ctrl+Shift+C"><i class="ti ti-copy"></i> Copiar</button>
       <button id="btn-bk-${mountId}" class="clear-btn"><i class="ti ti-history"></i> Backup</button>
-      <button id="btn-sub-${mountId}" class="run-btn" style="margin:0;padding:8px 14px;font-size:18px;border-radius:7px;"><i class="ti ti-send"></i> Enviar</button>
+      <button id="btn-sub-${mountId}" class="run-btn" style="margin:0;padding:8px 16px;font-size:15px;border-radius:7px;"><i class="ti ti-send"></i> Enviar</button>
     </div>
     <div class="example-chips" style="margin-bottom:10px;">${chips}</div>
     <div class="code-editor-wrap">
@@ -1123,83 +1173,230 @@ function buildEditor(mountId,lang,filename,version){
         <div class="editor-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
         <span class="editor-filename">${filename}</span>
         <div style="display:flex;gap:10px;align-items:center;">
-          <span id="cur-${mountId}" style="font-size:17px;color:#858585;">Ln 1, Col 1</span>
-          <span class="editor-ver">${version} &nbsp;<span id="as-${mountId}" style="color:#00ff88;font-size:18px;">● guardado</span></span>
+          <span id="cur-${mountId}" style="font-size:14px;color:#858585;">Ln 1, Col 1</span>
+          <span class="editor-ver">${version}&nbsp;<span id="as-${mountId}" style="color:#00ff88;font-size:13px;">● guardado</span></span>
         </div>
       </div>
       <div class="code-editor-body">
         <div class="line-numbers" id="ln-${mountId}">1</div>
         <div class="code-area">
           <div class="code-highlight" id="hl-${mountId}"></div>
-          <textarea class="code-textarea" id="ta-${mountId}" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+          <textarea class="code-textarea" id="ta-${mountId}" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-lang="${lang}"></textarea>
         </div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:6px;">
-      <button class="run-btn" id="run-${mountId}" title="Ctrl+Enter" style="border-radius:6px 0 0 6px;"><i class="ti ti-player-play-filled"></i> ${isCpp?'Compilar y Ejecutar':'Ejecutar'}</button>
-      <button class="clear-btn" id="clr-${mountId}" style="margin-left:0;border-left:none;"><i class="ti ti-trash"></i> Limpiar</button>
-      <button class="clear-btn" id="fmt-${mountId}" style="border-left:none;border-radius:0 6px 6px 0;"><i class="ti ti-code"></i> Formatear</button>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:8px;">
+      <button class="run-btn" id="run-${mountId}" title="Ctrl+Enter"><i class="ti ti-player-play-filled"></i> ${isCpp?'Compilar y Ejecutar':'Ejecutar'}</button>
+      <button class="clear-btn" id="clr-${mountId}"><i class="ti ti-trash"></i> Limpiar</button>
+      <button class="clear-btn" id="fmt-${mountId}"><i class="ti ti-code"></i> Formatear</button>
     </div>
     <div class="terminal-wrap">
       <div class="terminal-header">
-        <i class="ti ti-terminal" style="color:#00ff88;font-size:18px;"></i>
-        <span class="terminal-title">${isCpp?'g++ -std=c++17':'python3'} · output &nbsp;·&nbsp; <span style="font-size:18px;color:#4a5a7a;">Ctrl+Enter = ejecutar</span></span>
-        <button onclick="clearTerminal(this)" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#4a5a7a;font-size:17px;font-family:var(--font);">&#x232B; limpiar</button>
+        <i class="ti ti-terminal" style="color:#00ff88;font-size:15px;"></i>
+        <span class="terminal-title">${isCpp?'g++ -std=c++17':'python3'}&nbsp;·&nbsp;output&nbsp;&nbsp;<span style="font-size:12px;color:#3d5170;">Ctrl+Enter = ejecutar</span></span>
+        <button onclick="clearTerminal(this)" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#3d5170;font-size:13px;font-family:var(--font);">&#x232B; limpiar</button>
       </div>
       <div class="terminal-body" id="term-${mountId}"><div class="tl"><span class="tcursor"></span></div></div>
     </div>
   </div>`;
 
-  const ta=document.getElementById('ta-'+mountId),hl=document.getElementById('hl-'+mountId),ln=document.getElementById('ln-'+mountId),cur=document.getElementById('cur-'+mountId),term=document.getElementById('term-'+mountId),asEl=document.getElementById('as-'+mountId),pnEl=document.getElementById('proj-nm-'+mountId);
-  const HL=isCpp?hlCpp:hlPy;
-  let asT=null;
+  const ta  = document.getElementById('ta-'+mountId);
+  const hl  = document.getElementById('hl-'+mountId);
+  const lnEl= document.getElementById('ln-'+mountId);
+  const cur = document.getElementById('cur-'+mountId);
+  const term= document.getElementById('term-'+mountId);
+  const asEl= document.getElementById('as-'+mountId);
+  const pnEl= document.getElementById('proj-nm-'+mountId);
+  const HL  = isCpp ? hlCpp : hlPy;
+  let asT   = null;
 
-  function doHL(){const code=ta.value;hl.innerHTML=HL(code);ln.textContent=code.split('\n').map((_,i)=>i+1).join('\n');hl.scrollTop=ta.scrollTop;ln.scrollTop=ta.scrollTop;}
-  function updCur(){const pos=ta.selectionStart,bef=ta.value.substring(0,pos);if(cur)cur.textContent=`Ln ${bef.split('\n').length}, Col ${bef.split('\n').pop().length+1}`;}
-  function autoSave(){clearTimeout(asT);if(asEl){asEl.textContent='● guardando...';asEl.style.color='#ffaa44';}asT=setTimeout(()=>{localStorage.setItem('code_bk_'+mountId,ta.value);localStorage.setItem('code_nm_'+mountId,pnEl?.value||'');if(asEl){asEl.textContent='● guardado';asEl.style.color='#00ff88';}},1200);}
+  // ── Highlight & line-numbers sync (NO scrollTop here — only in scroll listener) ──
+  function doHL(){
+    const code=ta.value;
+    hl.innerHTML=HL(code);
+    const lineCount=code.split('\n').length;
+    lnEl.textContent=Array.from({length:lineCount},(_,i)=>i+1).join('\n');
+  }
 
-  ta.value=saved||EX.hola;doHL();
+  function syncScroll(){
+    hl.scrollTop=ta.scrollTop;
+    hl.scrollLeft=ta.scrollLeft;
+    lnEl.scrollTop=ta.scrollTop;
+  }
+
+  function updCur(){
+    const pos=ta.selectionStart;
+    const bef=ta.value.substring(0,pos);
+    const ln=bef.split('\n').length;
+    const col=bef.split('\n').pop().length+1;
+    if(cur) cur.textContent=`Ln ${ln}, Col ${col}`;
+  }
+
+  function autoSave(){
+    clearTimeout(asT);
+    if(asEl){asEl.textContent='● guardando...';asEl.style.color='#ffaa44';}
+    asT=setTimeout(()=>{
+      try{
+        localStorage.setItem(lsKey('bk'),ta.value);
+        localStorage.setItem(lsKey('nm'),pnEl?.value||'');
+      }catch(e){}
+      if(asEl){asEl.textContent='● guardado';asEl.style.color='#00ff88';}
+    },1500);
+  }
+
+  ta.value=savedCode;
+  doHL();
+
   ta.addEventListener('input',()=>{doHL();autoSave();});
-  ta.addEventListener('click',updCur);ta.addEventListener('keyup',updCur);
-  ta.addEventListener('scroll',()=>{hl.scrollTop=ta.scrollTop;ln.scrollTop=ta.scrollTop;});
-  if(pnEl)pnEl.addEventListener('input',autoSave);
+  ta.addEventListener('scroll',syncScroll);
+  ta.addEventListener('click',updCur);
+  ta.addEventListener('keyup',updCur);
+  if(pnEl) pnEl.addEventListener('input',autoSave);
 
+  // ── Keyboard shortcuts ──
   ta.addEventListener('keydown',e=>{
-    const s=ta.selectionStart,en=ta.selectionEnd,val=ta.value,bef=val.substring(0,s),aft=val.substring(en);
-    const cL=bef.split('\n').pop(),ind=cL.match(/^(\s*)/)[1];
-    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();document.getElementById('run-'+mountId)?.click();return;}
-    if(e.key==='C'&&e.ctrlKey&&e.shiftKey){e.preventDefault();navigator.clipboard?.writeText(ta.value).then(()=>toast('Código copiado'));return;}
-    if(e.key==='Tab'){e.preventDefault();if(en>s){const sl=val.substring(s,en).split('\n').map(l=>'  '+l).join('\n');ta.value=val.substring(0,s)+sl+val.substring(en);ta.selectionStart=s;ta.selectionEnd=s+sl.length;}else{ta.value=bef+'  '+aft;ta.selectionStart=ta.selectionEnd=s+2;}doHL();autoSave();return;}
-    if(e.key==='Enter'&&!e.ctrlKey){e.preventDefault();const extra=isCpp?cL.trimEnd().endsWith('{'):cL.trimEnd().endsWith(':');ta.value=bef+'\n'+ind+(extra?'  ':'')+aft;ta.selectionStart=ta.selectionEnd=s+1+ind.length+(extra?2:0);doHL();autoSave();return;}
-    if(e.key==='Backspace'&&s===en){const pairs={'(':')','{':'}','[':']','"':'"',"'":"'"};if(val[s-1]&&pairs[val[s-1]]===val[s]){e.preventDefault();ta.value=val.substring(0,s-1)+val.substring(s+1);ta.selectionStart=ta.selectionEnd=s-1;doHL();autoSave();return;}}
-    const cl={'(':')','{':'}','[':']'};
-    if(cl[e.key]){e.preventDefault();ta.value=bef+e.key+cl[e.key]+aft;ta.selectionStart=ta.selectionEnd=s+1;doHL();autoSave();return;}
-    if((e.key==='"'||e.key==="'")){if(val[s]===e.key){e.preventDefault();ta.selectionStart=ta.selectionEnd=s+1;return;}e.preventDefault();ta.value=bef+e.key+e.key+aft;ta.selectionStart=ta.selectionEnd=s+1;doHL();autoSave();return;}
-    if([')',']','}'].includes(e.key)&&val[s]===e.key){e.preventDefault();ta.selectionStart=ta.selectionEnd=s+1;return;}
+    const s=ta.selectionStart,en=ta.selectionEnd,val=ta.value;
+    const bef=val.substring(0,s),aft=val.substring(en);
+    const curLine=bef.split('\n').pop();
+    const indent=curLine.match(/^(\s*)/)[1];
+
+    if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
+      e.preventDefault();
+      document.getElementById('run-'+mountId)?.click();
+      return;
+    }
+    if(e.ctrlKey&&e.shiftKey&&e.key==='C'){
+      e.preventDefault();
+      navigator.clipboard?.writeText(ta.value).then(()=>toast('Código copiado'));
+      return;
+    }
+    if(e.key==='Tab'){
+      e.preventDefault();
+      if(en>s){
+        const lines=val.substring(s,en).split('\n').map(l=>'  '+l).join('\n');
+        ta.value=val.substring(0,s)+lines+val.substring(en);
+        ta.selectionStart=s; ta.selectionEnd=s+lines.length;
+      } else {
+        ta.value=bef+'  '+aft;
+        ta.selectionStart=ta.selectionEnd=s+2;
+      }
+      doHL();autoSave();return;
+    }
+    if(e.key==='Enter'&&!e.ctrlKey&&!e.metaKey){
+      e.preventDefault();
+      const trimmed=curLine.trimEnd();
+      const extraIndent=(isCpp?trimmed.endsWith('{'):trimmed.endsWith(':'))?'  ':'';
+      const ins='\n'+indent+extraIndent;
+      ta.value=bef+ins+aft;
+      ta.selectionStart=ta.selectionEnd=s+ins.length;
+      doHL();autoSave();return;
+    }
+    if(e.key==='Backspace'&&s===en&&s>0){
+      const pairs={'(':')','{':'}','[':']','"':'"',"'":"'"};
+      if(pairs[val[s-1]]===val[s]){
+        e.preventDefault();
+        ta.value=val.substring(0,s-1)+val.substring(s+1);
+        ta.selectionStart=ta.selectionEnd=s-1;
+        doHL();autoSave();return;
+      }
+    }
+    const closers={'(':')','{':'}','[':']'};
+    if(closers[e.key]){
+      e.preventDefault();
+      ta.value=bef+e.key+closers[e.key]+aft;
+      ta.selectionStart=ta.selectionEnd=s+1;
+      doHL();autoSave();return;
+    }
+    if(e.key==='"'||e.key==="'"){
+      if(val[s]===e.key&&val[s-1]!==e.key){e.preventDefault();ta.selectionStart=ta.selectionEnd=s+1;return;}
+      e.preventDefault();
+      ta.value=bef+e.key+e.key+aft;
+      ta.selectionStart=ta.selectionEnd=s+1;
+      doHL();autoSave();return;
+    }
+    if([')',']','}'].includes(e.key)&&val[s]===e.key){
+      e.preventDefault();
+      ta.selectionStart=ta.selectionEnd=s+1;
+      return;
+    }
   });
 
-  mount.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{ta.value=EX[c.dataset.key]||'';doHL();ta.focus();autoSave();}));
-  document.getElementById('run-'+mountId).addEventListener('click',()=>{term.innerHTML='<div class="tl t-info">// '+(isCpp?'Compilando...':'Ejecutando...')+'</div>';setTimeout(()=>isCpp?runCpp(ta.value,term):runPy(ta.value,term),200);});
-  document.getElementById('clr-'+mountId).addEventListener('click',()=>{ta.value='';doHL();term.innerHTML='<div class="tl"><span class="tcursor"></span></div>';autoSave();});
-  document.getElementById('fmt-'+mountId).addEventListener('click',()=>{ta.value=isCpp?fmtCpp(ta.value):fmtPy(ta.value);doHL();toast('Código formateado');autoSave();});
-  document.getElementById('btn-copy-'+mountId).addEventListener('click',()=>navigator.clipboard?.writeText(ta.value).then(()=>toast('Código copiado')));
-  document.getElementById('btn-bk-'+mountId).addEventListener('click',()=>{const bk=localStorage.getItem('code_bk_'+mountId);if(!bk){toast('Sin autoguardado');return;}ta.value=bk;doHL();toast('Backup restaurado');});
+  // ── Example chips ──
+  mount.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      ta.value=EX[chip.dataset.key]||'';
+      doHL();ta.focus();autoSave();
+    });
+  });
+
+  // ── Run ──
+  document.getElementById('run-'+mountId).addEventListener('click',()=>{
+    term.innerHTML='<div class="tl t-info">// '+(isCpp?'Compilando...':'Ejecutando...')+'</div>';
+    setTimeout(()=>isCpp?runCpp(ta.value,term):runPy(ta.value,term),80);
+  });
+
+  // ── Clear ──
+  document.getElementById('clr-'+mountId).addEventListener('click',()=>{
+    ta.value='';doHL();
+    term.innerHTML='<div class="tl"><span class="tcursor"></span></div>';
+    autoSave();
+  });
+
+  // ── Format ──
+  document.getElementById('fmt-'+mountId).addEventListener('click',()=>{
+    ta.value=isCpp?fmtCpp(ta.value):fmtPy(ta.value);
+    doHL();toast('Código formateado');autoSave();
+  });
+
+  // ── Copy ──
+  document.getElementById('btn-copy-'+mountId).addEventListener('click',()=>{
+    navigator.clipboard?.writeText(ta.value)
+      .then(()=>toast('Código copiado'))
+      .catch(()=>{const t=document.createElement('textarea');t.value=ta.value;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast('Código copiado');});
+  });
+
+  // ── Backup ──
+  document.getElementById('btn-bk-'+mountId).addEventListener('click',()=>{
+    const bk=localStorage.getItem(lsKey('bk'));
+    if(!bk){toast('Sin autoguardado disponible');return;}
+    if(ta.value===bk){toast('Ya tienes la versión guardada');return;}
+    ta.value=bk;doHL();toast('Backup restaurado');
+  });
+
+  // ── Submit ──
   document.getElementById('btn-sub-'+mountId).addEventListener('click',()=>{
-    const code=ta.value.trim();if(!code){toast('Escribe código primero');return;}
+    const code=ta.value.trim();
+    if(!code){toast('Escribe código antes de enviar');return;}
     if(!currentStudent){toast('Inicia sesión primero');return;}
-    const ap=config.activePeriod;const sess=getSessions(ap);
+    const ap=config.activePeriod;
+    const sess=getSessions(ap);
     if(!sess.length){toast('El profesor aún no ha creado sesiones');return;}
-    // Use config.activeSession if set, otherwise last session
-    const activeSess=config.activeSession?sess.find(s=>s.id===config.activeSession)||sess[sess.length-1]:sess[sess.length-1];
+    const activeSess=config.activeSession
+      ?sess.find(s=>s.id===config.activeSession)||sess[sess.length-1]
+      :sess[sess.length-1];
     const name=pnEl?.value.trim()||'Sin nombre';
-    const sub={mat:currentStudent.mat,name:currentStudent.name,projectName:name,lang,code,time:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),sessId:activeSess.id,sessLabel:activeSess.label,grade:null,feedback:''};
+    const sub={
+      mat:currentStudent.mat,
+      name:currentStudent.name,
+      projectName:name,
+      lang,
+      code,
+      time:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      sessId:activeSess.id,
+      sessLabel:activeSess.label,
+      grade:null,
+      feedback:''
+    };
     if(!codeSubmissions[ap])codeSubmissions[ap]=[];
-    // Always append — keep ALL submissions, never overwrite previous ones
+    // Always append — never overwrite
     codeSubmissions[ap].push(sub);
-    saveAll().then(()=>{toast('Enviado: "'+name+'" → '+activeSess.label);celebrate('📤','¡Código enviado!','Tu proyecto "'+name+'" fue enviado a '+activeSess.label);});
+    saveAll().then(()=>{
+      toast('Enviado: "'+name+'" → '+activeSess.label);
+      celebrate('📤','¡Código enviado!','Tu proyecto "'+name+'" fue enviado a '+activeSess.label);
+    });
   });
 
-  // ── Color reference + character guide appended below editor ──
+  // ── Color + character reference ──
   const colorRef=document.createElement('div');
   colorRef.className='card fade-up';
   colorRef.style.marginBottom='.75rem';
@@ -1291,8 +1488,32 @@ function execCpp(lines,env,fnDefs,term,done){
     if(line.startsWith('cout')){
       const raw=line.replace(/^cout\s*<<\s*/,'').replace(/;$/,'');
       const parts=splitCout(raw);let out='';
-      for(const p of parts){const pt=p.trim();if(pt==='endl'||pt==='"\\n"'||pt==="'\\n'"){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}if(pt.startsWith('"')&&pt.endsWith('"')){out+=pt.slice(1,-1);continue;}if(pt.startsWith("'")&&pt.endsWith("'")){out+=pt[1]||'';continue;}const v=evalC(pt,env,fnDefs);out+=typeof v==='string'?v:String(v);}
-      if(out)tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);return next();
+      for(const p of parts){
+        const pt=p.trim();
+        if(pt==='endl'){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
+        if(pt==='"\\n"'||pt==="'\\n'"){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
+        if(pt.startsWith('"')&&pt.endsWith('"')){
+          // Handle 
+ and 	 inside strings
+          const str=pt.slice(1,-1);
+          const parts2=str.split('\\n');
+          for(let pi=0;pi<parts2.length;pi++){
+            out+=parts2[pi].replace(/\\t/g,'    ');
+            if(pi<parts2.length-1){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';}
+          }
+          continue;
+        }
+        if(pt.startsWith("'")&&pt.endsWith("'")){
+          const ch=pt.slice(1,-1);
+          if(ch==='\\n'){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
+          out+=ch==='\\t'?'    ':ch[0]||'';continue;
+        }
+        const v=evalC(pt,env,fnDefs);
+        if(typeof v==='number'&&!Number.isInteger(v)){out+=parseFloat(v.toFixed(8)).toString();}
+        else out+=typeof v==='string'?v:String(v);
+      }
+      if(out)tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);
+      return next();
     }
     if(line.startsWith('cin')){const vars=line.replace(/^cin\s*/,'').replace(/;$/,'').split('>>').map(v=>v.trim()).filter(v=>v&&v!=='cin');if(!vars.length)return next();function askCin(vi){if(vi>=vars.length)return next();tInput(term,'',val=>{env[vars[vi]]=isNaN(val)||val===''?val:Number(val);askCin(vi+1);});}askCin(0);return;}
     if(line.startsWith('if')||line.startsWith('else')){const blk=collectBlock(lines,i);i=blk.ni;const condM=line.match(/^(?:else\s+)?if\s*\((.+)\)/);const cond=condM?evalCondC(condM[1],env,fnDefs):true;execCpp(cond?blk.body:blk.elseBody,{...env},fnDefs,term,()=>next());return;}
@@ -1333,8 +1554,19 @@ function execPy(stmts,env,fnDefs,term,done){
       const args=splitArgs(inner);const kwargs={};const pos=[];
       for(const a of args){const kw=a.match(/^(sep|end)\s*=\s*(.+)$/);if(kw)kwargs[kw[1]]=evalPy(kw[2],env,fnDefs);else pos.push(evalPy(a,env,fnDefs));}
       const sep=kwargs.sep!==undefined?String(kwargs.sep):' ';
-      const out=pos.map(v=>v===null?'None':v===true?'True':v===false?'False':Array.isArray(v)?'['+v.map(x=>typeof x==='string'?JSON.stringify(x):String(x)).join(', ')+']':String(v)).join(sep);
-      tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);return next();
+      const endCh=kwargs.end!==undefined?String(kwargs.end):'\n';
+      const fmt=v=>v===null?'None':v===true?'True':v===false?'False':Array.isArray(v)?'['+v.map(x=>typeof x==='string'?JSON.stringify(x):String(x)).join(', ')+']':typeof v==='number'&&!Number.isInteger(v)?parseFloat(v.toFixed(10)).toString():String(v);
+      const out=pos.map(fmt).join(sep);
+      // Handle \n within the output string
+      const lines2=out.split('\n');
+      for(let li=0;li<lines2.length;li++){
+        if(li<lines2.length-1||(li===lines2.length-1&&endCh==='\n')){
+          tAppend(term,`<div class="tl t-out">${hEsc(lines2[li])}</div>`);
+        }else if(lines2[li]){
+          tAppend(term,`<div class="tl t-out">${hEsc(lines2[li]+endCh)}</div>`);
+        }
+      }
+      return next();
     }
     const inpM=line.match(/^(\w+)\s*=\s*(int|float|str)?\s*\(?\s*input\s*\(([^)]*)\)\s*\)?$/);
     if(inpM){let prompt=inpM[3]?.trim()||'';if(/^["'].*["']$/.test(prompt))prompt=prompt.slice(1,-1);tInput(term,prompt,val=>{env[inpM[1]]=inpM[2]==='int'?parseInt(val)||0:inpM[2]==='float'?parseFloat(val)||0:val;next();});return;}
@@ -1806,17 +2038,25 @@ window.clearAllData=async function(){
 // ════════════════════════════════════════
 // STARTUP
 // ════════════════════════════════════════
-// Render immediately — never show blank screen
-showSection('students');
-showStudentLogin();
+function startApp(){
+  showSection('students');
+  showStudentLogin();
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
 
 // Load Firebase data then re-render
 loadAll().then(()=>{
   // Restore student session if saved
-  const saved=localStorage.getItem('inf2v2-student');
-  if(saved){
+  let saved2=null;
+  try{const sv=localStorage.getItem('inf2v2-student');if(sv)saved2=JSON.parse(sv);}catch(e){localStorage.removeItem('inf2v2-student');}
+  if(saved2){
     try{
-      const s=JSON.parse(saved);
+      const s=saved2;
       const match=ROSTER.find(r=>r.mat===s.mat&&r.name===s.name);
       if(match){
         currentStudent=match;
