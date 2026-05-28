@@ -314,8 +314,8 @@ input[type="date"]{color-scheme:dark;}
 
 <!-- Tabs -->
 <div class="tabs">
-  <button class="tab active" id="tab-students" onclick="showTab('students')"><i class="ti ti-users"></i> Alumnos</button>
-  <button class="tab" id="tab-teacher" onclick="showTab('teacher')"><i class="ti ti-lock"></i> Profesor</button>
+  <button class="tab active" id="tab-students" onclick="showTab('students',event)"><i class="ti ti-users"></i> Alumnos</button>
+  <button class="tab" id="tab-teacher" onclick="showTab('teacher',event)"><i class="ti ti-lock"></i> Profesor</button>
 </div>
 
 <!-- Content -->
@@ -347,7 +347,7 @@ input[type="date"]{color-scheme:dark;}
             </select>
           </div>
           <label class="checkbox-row"><input type="checkbox" id="stu-rem"> Recordar sesión</label>
-          <button class="btn btn-primary btn-full" onclick="doLogin()"><i class="ti ti-login"></i> Entrar</button>
+          <button class="btn btn-primary btn-full" id="stu-entrar-btn"><i class="ti ti-login"></i> Entrar</button>
         </div>
       </div>
     </div>
@@ -366,7 +366,7 @@ input[type="date"]{color-scheme:dark;}
             <label>Contraseña</label>
             <input id="tea-pwd" type="password" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doTeacherLogin()">
           </div>
-          <button class="btn btn-primary btn-full" onclick="doTeacherLogin()" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;">
+          <button class="btn btn-primary btn-full" id="tea-entrar-btn" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;">
             <i class="ti ti-login"></i> Entrar
           </button>
         </div>
@@ -478,13 +478,17 @@ function startListener(){
     updateTopbar();
     // Only re-render if NOT in a login transition
     if(window._navLock)return;
-    if(isTeacher)renderTeacherPanel();
-    else if(currentStudent){
-      // Auto-update viewingParcial if active period changed
-      if(viewingParcial!==config.activePeriod && studentTab==='inicio'){
-        viewingParcial=config.activePeriod;
+    if(isTeacher){
+      const ae=document.activeElement;
+      const typing=ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT');
+      if(!typing)renderTeacherPanel();
+    } else if(currentStudent){
+      if(viewingParcial!==config.activePeriod&&studentTab==='inicio')viewingParcial=config.activePeriod;
+      if(studentTab==='cpp'||studentTab==='python'||studentTab==='frontend'){
+        try{const lv=getLevel(calcGlobalGrade(currentStudent.mat));const b=document.getElementById('stu-bar-name');if(b)b.textContent=firstNames(currentStudent.name)+' · '+lv.badge+' '+lv.name;}catch(ex){}
+      } else {
+        renderStudentDashboard();
       }
-      renderStudentDashboard();
     }
   });
 }
@@ -561,7 +565,9 @@ function showSection(name){
   document.getElementById('tab-teacher').classList.toggle('active',name==='teacher');
 }
 
-window.showTab=function(name){
+window.showTab=function(name,e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  window.scrollTo({top:0,behavior:'instant'});
   showSection(name);
   if(name==='students'){
     if(currentStudent)showStudentDash();
@@ -1025,7 +1031,9 @@ function speakWelcome(name,isT=false){
   // Male names in roster: Brandon, Ivan. Teacher = male. All others female.
   const maleNames=new Set(['Brandon','Ivan','Bréndon']);
   const isMale=isT||maleNames.has(firstName)||maleNames.has(phonetic);
-  const greet=isMale?`Bienvenido, ${isT?'profe ':''} ${isT?'':phonetic}.`:`Bienvenida, ${phonetic}.`;
+  const hora=new Date().getHours();
+  const momento=hora<12?'buenos días':hora<19?'buenas tardes':'buenas noches';
+  const greet=`Hola, ${isT?'Profe':phonetic}, ${momento}.`;
   const utter=new SpeechSynthesisUtterance(greet);
   utter.lang='es-US';utter.rate=0.95;utter.pitch=1.05;
   const go=()=>{
@@ -1470,7 +1478,19 @@ function runCpp(code,term){
   execCpp(flatCpp(mainM[1].replace(/\}\s*$/,'')),{},fnDefs,term,()=>{tAppend(term,'<div class="tl t-success">// exit code 0</div>');tAppend(term,'<div class="tl"><span class="tcursor"></span></div>');});
 }
 function parseCppFns(code){const fns={};const re=/(\w+)\s+(\w+)\s*\(([^)]*)\)\s*\{/g;let m;while((m=re.exec(code))!==null){if(m[2]==='main')continue;let d=1,j=re.lastIndex;while(j<code.length&&d>0){if(code[j]==='{')d++;else if(code[j]==='}')d--;j++;}fns[m[2]]={params:m[3].split(',').map(p=>p.trim()).filter(Boolean),body:flatCpp(code.slice(re.lastIndex,j-1))};}return fns;}
-function flatCpp(raw){return raw.split('\n').map(l=>l.trim()).filter(l=>l&&l!=='{');}
+function flatCpp(raw){
+  const lines=[];
+  for(let l of raw.split('\n')){
+    l=l.trim();
+    if(!l)continue;
+    // Split "} else if(...){" and "} else {" into separate logical lines
+    if(l.match(/^\}\s*else\s+if/)){lines.push('}');lines.push(l.replace(/^\}\s*/,''));}
+    else if(l.match(/^\}\s*else\s*\{/)){lines.push('}');lines.push('else{');}
+    else if(l.match(/^\}\s*else\s*$/)){lines.push('}');lines.push('else');}
+    else if(l!=='{')lines.push(l);
+  }
+  return lines;
+}
 function execCpp(lines,env,fnDefs,term,done){
   let i=0;
   function next(){
@@ -1494,8 +1514,8 @@ function execCpp(lines,env,fnDefs,term,done){
         if(pt==='endl'){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
         if(pt==='"\\n"'||pt==="'\\n'"){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
         if(pt.startsWith('"')&&pt.endsWith('"')){
-          // Handle 
- and 	 inside strings
+          // Handle \n and \t inside strings
+
           const str=pt.slice(1,-1);
           const parts2=str.split('\\n');
           for(let pi=0;pi<parts2.length;pi++){
@@ -1625,6 +1645,14 @@ function evalCondPy(cond,env,fnDefs){cond=cond.trim();if(cond.startsWith('not ')
 // ════════════════════════════════════════
 // TEACHER PANEL
 // ════════════════════════════════════════
+window.clearActividadGrade=async function(mat,ap,key,sessId){
+  if(!grades[mat]||!grades[mat][ap]||!grades[mat][ap][key])return;
+  delete grades[mat][ap][key][sessId];
+  await saveAll();
+  toast('Calificación eliminada — espacio disponible para el próximo código');
+  renderTeacherPanel();
+};
+
 window.setTeacherTab=function(tab){teacherTab=tab;renderTeacherPanel();};
 window.setTeacherStuIdx=function(idx){teacherStudentIdx=idx;renderTeacherPanel();};
 
@@ -2042,16 +2070,25 @@ window.clearAllData=async function(){
 function startApp(){
   showSection('students');
   showStudentLogin();
-  // Wire up tab buttons (in case onclick attributes are blocked by CSP)
+
+  // Wire ALL interactive elements via JS (bypass CSP inline-script restrictions)
+  // Tab buttons
   const stuTab=document.getElementById('tab-students');
   const teaTab=document.getElementById('tab-teacher');
-  if(stuTab)stuTab.onclick=()=>showTab('students');
-  if(teaTab)teaTab.onclick=()=>showTab('teacher');
-  // Wire up login buttons
-  const stuBtn=document.querySelector('#stu-login .btn-primary');
-  if(stuBtn)stuBtn.onclick=doLogin;
+  if(stuTab)stuTab.onclick=(e)=>showTab('students',e);
+  if(teaTab)teaTab.onclick=(e)=>showTab('teacher',e);
+
+  // Student login: Entrar button + Enter key on select
+  const stuBtn=document.getElementById('stu-entrar-btn')||document.querySelector('#stu-login .btn-primary');
+  if(stuBtn)stuBtn.onclick=window.doLogin;
+  const stuSel=document.getElementById('stu-sel');
+  if(stuSel)stuSel.onkeydown=(e)=>{if(e.key==='Enter')window.doLogin();};
+
+  // Teacher login: Entrar button + Enter key on password
+  const teaBtn=document.getElementById('tea-entrar-btn')||document.querySelector('#tea-login .btn-primary');
+  if(teaBtn)teaBtn.onclick=window.doTeacherLogin;
   const teaInput=document.getElementById('tea-pwd');
-  if(teaInput)teaInput.onkeydown=(e)=>{if(e.key==='Enter')doTeacherLogin();};
+  if(teaInput)teaInput.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
 }
 
 if(document.readyState==='loading'){
