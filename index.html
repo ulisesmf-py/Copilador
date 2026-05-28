@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
 <title>Informatica II</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <style>
@@ -2041,6 +2042,16 @@ window.clearAllData=async function(){
 function startApp(){
   showSection('students');
   showStudentLogin();
+  // Wire up tab buttons (in case onclick attributes are blocked by CSP)
+  const stuTab=document.getElementById('tab-students');
+  const teaTab=document.getElementById('tab-teacher');
+  if(stuTab)stuTab.onclick=()=>showTab('students');
+  if(teaTab)teaTab.onclick=()=>showTab('teacher');
+  // Wire up login buttons
+  const stuBtn=document.querySelector('#stu-login .btn-primary');
+  if(stuBtn)stuBtn.onclick=doLogin;
+  const teaInput=document.getElementById('tea-pwd');
+  if(teaInput)teaInput.onkeydown=(e)=>{if(e.key==='Enter')doTeacherLogin();};
 }
 
 if(document.readyState==='loading'){
