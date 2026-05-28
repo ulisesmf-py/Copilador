@@ -1494,8 +1494,8 @@ function execCpp(lines,env,fnDefs,term,done){
         if(pt==='endl'){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
         if(pt==='"\\n"'||pt==="'\\n'"){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
         if(pt.startsWith('"')&&pt.endsWith('"')){
-          // Handle 
- and 	 inside strings
+          // Handle \n and \t inside strings
+
           const str=pt.slice(1,-1);
           const parts2=str.split('\\n');
           for(let pi=0;pi<parts2.length;pi++){
