@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: wss:;">
 <title>Informatica II</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <style>
@@ -550,7 +550,11 @@ function startListener(){
     if(isTeacher&&(teaVisible||!stuVisible)){
       const ae=document.activeElement;
       const typing=ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT');
-      if(!typing)renderTeacherPanel();
+      if(!typing){
+        // Debounce: only re-render after data settles (300ms)
+        clearTimeout(window._teacherRenderTimer);
+        window._teacherRenderTimer=setTimeout(()=>renderTeacherPanel(),300);
+      }
     }
     if(currentStudent&&stuVisible){
       if(viewingParcial!==config.activePeriod&&studentTab==='inicio')viewingParcial=config.activePeriod;
@@ -1848,11 +1852,9 @@ function renderTeacherPanel(){
 }
 function _renderTeacherPanelInner(panel){
   try{
-  console.log('[TEACHER PANEL] Starting render, teacherTab=',teacherTab,'ap=',config.activePeriod);
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
-  console.log('[TEACHER PANEL] tabsHTML built, length=',tabsHTML.length);
 
   let content='';
   if(teacherTab==='student'){
@@ -2074,22 +2076,34 @@ function _renderTeacherPanelInner(panel){
     </div>`;
   }
 
-  console.log('[TEACHER PANEL] Setting innerHTML, content length=',content.length);
   panel.innerHTML=tabsHTML+content;
-  console.log('[TEACHER PANEL] innerHTML set successfully');
-  // Wire up existing rubric weight inputs to counter
-  if(teacherTab==='config'){
-    setTimeout(()=>{
-      document.querySelectorAll('[id^="rc-weight-"]').forEach(el=>el.addEventListener('input',window.updatePctCounter));
+
+  // Wire ALL interactive elements via JS (CSP blocks inline onclick)
+  setTimeout(()=>{
+    // Inner tabs
+    panel.querySelectorAll('.inner-tabs .tab').forEach(btn=>{
+      const tab=btn.textContent.trim().toLowerCase();
+      const tabMap={'alumno':'student','foro':'forum','códigos':'codigos','config':'config'};
+      const tabKey=tabMap[tab]||tab;
+      btn.onclick=()=>{teacherTab=tabKey;renderTeacherPanel();};
+    });
+    // Student dot navigation
+    panel.querySelectorAll('.stu-dot').forEach((dot,i)=>{
+      dot.onclick=()=>{teacherStudentIdx=i;renderTeacherPanel();};
+    });
+    // Prev/Next student buttons
+    const prevBtn=panel.querySelector('[onclick*="teacherStudentIdx-1"]')||
+                  panel.querySelectorAll('.btn.btn-sm')[0];
+    const nextBtn=panel.querySelector('[onclick*="teacherStudentIdx+1"]')||
+                  panel.querySelectorAll('.btn.btn-sm')[1];
+    if(prevBtn)prevBtn.onclick=()=>{if(teacherStudentIdx>0){teacherStudentIdx--;renderTeacherPanel();}};
+    if(nextBtn)nextBtn.onclick=()=>{if(teacherStudentIdx<ROSTER.length-1){teacherStudentIdx++;renderTeacherPanel();}};
+    // Rubric weight inputs counter
+    if(teacherTab==='config'){
+      panel.querySelectorAll('[id^="rc-weight-"]').forEach(el=>el.addEventListener('input',window.updatePctCounter));
       window.updatePctCounter();
-    },0);
-  }
-  }catch(err){
-    console.error('[TEACHER PANEL] CRASH:', err.message, err.stack);
-    panel.innerHTML='<div style="padding:20px;background:#1a0000;color:#ff6666;font-family:monospace;font-size:13px;border-radius:8px;margin:20px;">' +
-      '<b>Error en panel del profesor:</b><br><br>' + err.message + '<br><br>' +
-      '<small>' + (err.stack||'').replace(/</g,'&lt;').split('\n').slice(0,5).join('<br>') + '</small></div>';
-  }
+    }
+  },0);
 }
 
 // ── Teacher actions ──
