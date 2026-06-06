@@ -1847,9 +1847,12 @@ function renderTeacherPanel(){
   _renderTeacherPanelInner(panel);
 }
 function _renderTeacherPanelInner(panel){
+  try{
+  console.log('[TEACHER PANEL] Starting render, teacherTab=',teacherTab,'ap=',config.activePeriod);
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
+  console.log('[TEACHER PANEL] tabsHTML built, length=',tabsHTML.length);
 
   let content='';
   if(teacherTab==='student'){
@@ -2071,13 +2074,21 @@ function _renderTeacherPanelInner(panel){
     </div>`;
   }
 
+  console.log('[TEACHER PANEL] Setting innerHTML, content length=',content.length);
   panel.innerHTML=tabsHTML+content;
+  console.log('[TEACHER PANEL] innerHTML set successfully');
   // Wire up existing rubric weight inputs to counter
   if(teacherTab==='config'){
     setTimeout(()=>{
       document.querySelectorAll('[id^="rc-weight-"]').forEach(el=>el.addEventListener('input',window.updatePctCounter));
       window.updatePctCounter();
     },0);
+  }
+  }catch(err){
+    console.error('[TEACHER PANEL] CRASH:', err.message, err.stack);
+    panel.innerHTML='<div style="padding:20px;background:#1a0000;color:#ff6666;font-family:monospace;font-size:13px;border-radius:8px;margin:20px;">' +
+      '<b>Error en panel del profesor:</b><br><br>' + err.message + '<br><br>' +
+      '<small>' + (err.stack||'').replace(/</g,'&lt;').split('\n').slice(0,5).join('<br>') + '</small></div>';
   }
 }
 
