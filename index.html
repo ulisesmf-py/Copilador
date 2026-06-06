@@ -45,7 +45,7 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 
 /* ── Sections ── */
 .sections{padding:0 20px 28px;max-width:880px;margin:0 auto;}
-.section{display:none !important;}
+.section{display:none;}
 .section.active{display:block !important;}
 
 /* ── Cards ── */
@@ -536,7 +536,7 @@ function startListener(){
     // Only re-render the CURRENTLY VISIBLE section
     const stuVisible=document.getElementById('students-section')?.classList.contains('active');
     const teaVisible=document.getElementById('teacher-section')?.classList.contains('active');
-    if(isTeacher&&teaVisible){
+    if(isTeacher&&(teaVisible||!stuVisible)){
       const ae=document.activeElement;
       const typing=ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT');
       if(!typing)renderTeacherPanel();
@@ -614,15 +614,16 @@ function showSection(name){
   clearTimeout(window._navLockTimer);
   window._navLockTimer=setTimeout(()=>{window._navLock=false;},2000);
 
-  // HARD isolation: one section visible, other completely hidden
+  // Toggle sections via both style and class
   const stuSec=document.getElementById('students-section');
   const teaSec=document.getElementById('teacher-section');
-  if(name==='students'){
-    if(stuSec){stuSec.style.cssText='display:block!important';stuSec.classList.add('active');}
-    if(teaSec){teaSec.style.cssText='display:none!important';teaSec.classList.remove('active');}
-  } else {
-    if(teaSec){teaSec.style.cssText='display:block!important';teaSec.classList.add('active');}
-    if(stuSec){stuSec.style.cssText='display:none!important';stuSec.classList.remove('active');}
+  if(stuSec){
+    stuSec.style.display=name==='students'?'block':'none';
+    stuSec.classList.toggle('active',name==='students');
+  }
+  if(teaSec){
+    teaSec.style.display=name==='teacher'?'block':'none';
+    teaSec.classList.toggle('active',name==='teacher');
   }
 
   // Toggle tab buttons
@@ -800,9 +801,6 @@ window.setViewingParcial=function(pkey){viewingParcial=pkey;renderStudentDashboa
 function renderStudentDashboard(){
   const dash=document.getElementById('stu-dash');
   if(!dash||!currentStudent)return;
-  // Guard: only render if student section is visible
-  const stuSec=document.getElementById('students-section');
-  if(stuSec&&stuSec.style.display==='none')return;
   const mat=currentStudent.mat;
   const vp=viewingParcial||config.activePeriod;
 
@@ -1829,9 +1827,8 @@ window.setTeacherStuIdx=function(idx){teacherStudentIdx=idx;renderTeacherPanel()
 
 function renderTeacherPanel(){
   const panel=document.getElementById('tea-panel');if(!panel)return;
-  // Guard: only render if teacher section is visible
-  const teaSec=document.getElementById('teacher-section');
-  if(teaSec&&teaSec.style.display==='none')return;
+  // Only render if teacher is logged in
+  if(!isTeacher)return;
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
