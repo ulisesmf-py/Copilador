@@ -326,28 +326,25 @@ input[type="date"]{color-scheme:dark;}
         <div class="login-box">
           <div class="login-icon"><i class="ti ti-terminal-2"></i></div>
           <h2>// Acceso Alumno</h2>
-          <p>Ingresa tu matrícula y selecciona tu nombre.</p>
+          <p style="margin-bottom:20px;">Ingresa tus credenciales <b style="color:var(--accent);">@student.blackai.com</b></p>
           <div class="form-group">
-            <label>Matrícula</label>
-            <input id="stu-mat" type="text" placeholder="Ej: 262016420" maxlength="12" style="letter-spacing:.05em;">
+            <label>Usuario</label>
+            <div style="position:relative;">
+              <input id="stu-mat" type="text" placeholder="matricula o usuario" style="padding-right:158px;font-family:var(--font);" autocomplete="username">
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(0,180,255,0.5);pointer-events:none;font-family:var(--font);">@student.blackai.com</span>
+            </div>
           </div>
           <div class="form-group">
-            <label>Nombre</label>
-            <select id="stu-sel">
-              <option value="">— Selecciona tu nombre —</option>
-              <option value="262016420">CASTRO ROSAS AMERICA NASLIRANI</option>
-              <option value="263046700">GARCIA CASAS EVANY TADEO</option>
-              <option value="262116190">GODINEZ REYES PAOLA NATALI</option>
-              <option value="262116208">GUERRERO GARCIA KARLA MELANY</option>
-              <option value="261065103">LOPEZ MARTINEZ MARTHA REBECA</option>
-              <option value="263036573">PEREZ FLORES BRANDON GAEL</option>
-              <option value="262126256">SALAZAR CARDENAS LESLY VALERIA</option>
-              <option value="263046697">SANCHEZ AVILA IVAN EDAHI</option>
-              <option value="262016326">VELEZ SANCHEZ ANGIE DANIELA</option>
-            </select>
+            <label>Contraseña</label>
+            <input id="stu-pwd" type="password" placeholder="••••••••••" autocomplete="current-password">
           </div>
-          <label class="checkbox-row"><input type="checkbox" id="stu-rem"> Recordar sesión</label>
-          <button class="btn btn-primary btn-full" id="stu-entrar-btn"><i class="ti ti-login"></i> Entrar</button>
+          <div id="stu-error" style="display:none;color:var(--red);font-size:14px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:7px;"></div>
+          <label class="checkbox-row" style="margin-bottom:16px;">
+            <input type="checkbox" id="stu-rem"> Recordar mi sesión
+          </label>
+          <button id="stu-entrar-btn" class="btn btn-primary btn-full">
+            <i class="ti ti-login"></i> Entrar al Aula 🚀
+          </button>
         </div>
       </div>
     </div>
@@ -356,23 +353,30 @@ input[type="date"]{color-scheme:dark;}
   <div class="section" id="teacher-section">
     <div id="tea-login">
       <div class="login-wrap">
-        <div class="login-box">
+        <div class="login-box" style="border-color:rgba(124,58,237,0.25);">
           <div class="login-icon" style="background:linear-gradient(135deg,#2d1b69,#1a0f3c);">
             <i class="ti ti-shield-lock" style="color:#a78bfa;"></i>
           </div>
-          <h2>// Acceso Profesor</h2>
-          <p>Gestiona calificaciones, asistencia, foro y configuración del curso.</p>
+          <h2 style="color:#a78bfa;">// Acceso Profesor</h2>
+          <p>Ingresa tus credenciales <b style="color:#a78bfa;">@master.blackai.com</b></p>
+          <div class="form-group">
+            <label>Usuario</label>
+            <div style="position:relative;">
+              <input id="tea-user" type="text" placeholder="usuario" style="padding-right:150px;font-family:var(--font);">
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(167,139,250,0.55);pointer-events:none;font-family:var(--font);">@master.blackai.com</span>
+            </div>
+          </div>
           <div class="form-group">
             <label>Contraseña</label>
-            <input id="tea-pwd" type="password" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doTeacherLogin()">
+            <input id="tea-pwd" type="password" placeholder="••••••••••">
           </div>
-          <button class="btn btn-primary btn-full" id="tea-entrar-btn" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;">
-            <i class="ti ti-login"></i> Entrar
+          <div id="tea-error" style="display:none;color:var(--red);font-size:14px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:7px;"></div>
+          <button id="tea-entrar-btn" class="btn btn-primary btn-full" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;background:rgba(124,58,237,0.12);">
+            <i class="ti ti-login"></i> Entrar al Aula
           </button>
         </div>
       </div>
-    </div>
-    <div id="tea-panel" style="display:none;"></div>
+        <div id="tea-panel" style="display:none;"></div>
   </div>
 </div>
 
@@ -390,9 +394,11 @@ input[type="date"]{color-scheme:dark;}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {getDatabase,ref,set,get,onValue} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import {getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const fbApp=initializeApp({apiKey:"AIzaSyDIucPhIp0gSLPcmCUTYrY7CJx5LYBzCQU",authDomain:"foro-ee8a5.firebaseapp.com",databaseURL:"https://foro-ee8a5-default-rtdb.firebaseio.com",projectId:"foro-ee8a5",storageBucket:"foro-ee8a5.firebasestorage.app",messagingSenderId:"548605948271",appId:"1:548605948271:web:6d903b2432429d7a04b89a"});
 const db=getDatabase(fbApp);
+const auth=getAuth(fbApp);
 const PATH='informatica2v2'; // Fresh path — clean slate
 
 // ════════════════════════════════════════
@@ -417,6 +423,19 @@ const DEFAULT_CRITERIA=[
   {key:'analisis',label:'Analisis de Casos',weight:10,icon:'ti-presentation',freq:'parcial'}
 ];
 const PERIODS=[{key:'p1',label:'Primer Parcial',short:'1er Parcial'},{key:'p2',label:'Segundo Parcial',short:'2do Parcial'},{key:'pf',label:'Final',short:'Final'}];
+
+// Email local-part → Matrícula mapping (from @student.blackai.com accounts)
+const EMAIL_MAP={
+  'america':'262016420',
+  'tadeo':'263046700',
+  'natali':'262116190',
+  'melany':'262116208',
+  'martha':'261065103',
+  'brandon':'263036573',
+  'lesly':'262126256',
+  'ivan':'263046697',
+  'angie':'262016326',
+};
 const MAX_FALTAS=3;
 
 // ════════════════════════════════════════
@@ -445,27 +464,24 @@ async function saveAll(){
   document.getElementById('saving-ind').classList.add('show');
   // Primary save — all app data
   await set(ref(db,PATH),{questions,replies,grades,attendance,sessions,codeSubmissions,config});
-  // Sync grades to /grades/{mat}/informatica2/ for cross-platform visibility
-  try{
-    const syncPromises=[];
-    for(const mat of Object.keys(grades)){
-      const studentGrades=grades[mat];
-      const syncData={};
-      // Map each parcial to the standardized structure
-      for(const [pkey,pdata] of Object.entries(studentGrades)){
-        const parcialLabel=pkey==='p1'?'parcial1':pkey==='p2'?'parcial2':'final';
-        // Calculate final grade for this parcial
-        const fg=calcFinalGrade(mat,pkey);
-        syncData[parcialLabel]={
-          score:fg!==null?parseFloat(fg.toFixed(2)):null,
-          detalle:pdata,
-          updated:Date.now()
-        };
+  // Sync grades to /grades/{mat}/informatica2/ — fire and forget (non-blocking)
+  // Requires Firebase rules to allow write on /grades/ path
+  setTimeout(()=>{
+    try{
+      const syncPromises=[];
+      for(const mat of Object.keys(grades)){
+        const syncData={};
+        for(const [pkey] of Object.entries(grades[mat]||{})){
+          const parcialLabel=pkey==='p1'?'parcial1':pkey==='p2'?'parcial2':'final';
+          const fg=calcFinalGrade(mat,pkey);
+          syncData[parcialLabel]={score:fg!==null?parseFloat(fg.toFixed(2)):null,updated:Date.now()};
+        }
+        if(Object.keys(syncData).length)
+          syncPromises.push(set(ref(db,`grades/${mat}/informatica2`),syncData).catch(()=>{}));
       }
-      syncPromises.push(set(ref(db,`grades/${mat}/informatica2`),syncData));
-    }
-    if(syncPromises.length)await Promise.all(syncPromises);
-  }catch(e){console.warn('Grade sync error:',e);}
+      if(syncPromises.length)Promise.all(syncPromises).catch(()=>{});
+    }catch(e){}
+  },0);
   setTimeout(()=>document.getElementById('saving-ind').classList.remove('show'),800);
 }
 
@@ -488,6 +504,23 @@ async function loadAll(){
   _fbReady=true;
   updateTopbar();
 }
+
+// Auto-restore session from Firebase Auth state
+onAuthStateChanged(auth,user=>{
+  if(user&&!currentStudent&&!isTeacher){
+    // Restore student session from Firebase Auth
+    const localPart=user.email.split('@')[0].toLowerCase();
+    const mat=EMAIL_MAP[localPart]||localPart;
+    const match=ROSTER.find(r=>r.mat===mat);
+    if(match){
+      currentStudent=match;
+      viewingParcial=config.activePeriod;
+      document.getElementById('role-bar-student').style.display='flex';
+      document.getElementById('stu-bar-name').textContent=firstNames(match.name)+' · '+getLevel(calcGlobalGrade(match.mat)).badge;
+      if(_fbReady){showSection('students');showStudentDash();}
+    }
+  }
+});
 
 function startListener(){
   onValue(ref(db,PATH),snap=>{
@@ -619,44 +652,71 @@ function showStudentLogin(){
   const dashEl=document.getElementById('stu-dash');
   if(loginEl)loginEl.style.display='block';
   if(dashEl)dashEl.style.display='none';
-  // Restore saved session values from localStorage
+  // Clear error, restore saved user if remembered
+  const errEl=document.getElementById('stu-error');
+  if(errEl)errEl.style.display='none';
   try{
     const saved=localStorage.getItem('inf2v2-student');
     if(saved){
       const pf=JSON.parse(saved);
       const matEl=document.getElementById('stu-mat');
-      const selEl=document.getElementById('stu-sel');
       const remEl=document.getElementById('stu-rem');
-      if(matEl&&pf.mat)matEl.value=pf.mat;
-      if(selEl&&pf.mat)selEl.value=pf.mat;
+      if(matEl&&(pf.mat||pf.email)){matEl.value=pf.email?pf.email.split('@')[0]:pf.mat;}
       if(remEl)remEl.checked=true;
     }
   }catch(e){localStorage.removeItem('inf2v2-student');}
 }
 
-window.doLogin=function(){
-  const mat=(document.getElementById('stu-mat')?.value||'').trim();
-  const sel=document.getElementById('stu-sel')?.value||'';
+window.doLogin=async function(){
+  const userInput=(document.getElementById('stu-mat')?.value||'').trim();
+  const pwd=document.getElementById('stu-pwd')?.value||'';
   const rem=document.getElementById('stu-rem')?.checked;
-  if(!sel){toast('Selecciona tu nombre del listado');return;}
-  if(!mat){toast('Ingresa tu matrícula');return;}
-  const student=ROSTER.find(r=>r.mat===mat&&r.mat===sel);
-  if(!student){toast('Matrícula y nombre no coinciden. Verifica tus datos.');return;}
-  currentStudent=student;
-  viewingParcial=config.activePeriod;
-  studentTab='inicio';
-  if(rem)localStorage.setItem('inf2v2-student',JSON.stringify(student));
-  else localStorage.removeItem('inf2v2-student');
-  document.getElementById('role-bar-student').style.display='flex';
-  document.getElementById('stu-bar-name').textContent=firstNames(student.name)+' · '+getLevel(calcGlobalGrade(student.mat)).badge;
-  speakWelcome(firstNames(student.name));
-  showSection('students');
-  showStudentDash();
+  const errEl=document.getElementById('stu-error');
+  const btn=document.getElementById('stu-entrar-btn');
+  if(!userInput){if(errEl){errEl.textContent='Ingresa tu usuario';errEl.style.display='block';}return;}
+  if(!pwd){if(errEl){errEl.textContent='Ingresa tu contraseña';errEl.style.display='block';}return;}
+  if(errEl)errEl.style.display='none';
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Verificando...';}
+  const email=userInput.includes('@')?userInput:userInput+'@student.blackai.com';
+  try{
+    const cred=await signInWithEmailAndPassword(auth,email,pwd);
+    const uid=cred.user.uid;
+    // Match student by email/uid against ROSTER
+    // Email format: matricula@student.blackai.com or nombre@student.blackai.com
+    const localPart=email.split('@')[0].toLowerCase();
+    const mat=EMAIL_MAP[localPart]||localPart;
+    const student=ROSTER.find(r=>r.mat===mat);
+    if(!student){
+      if(errEl){errEl.textContent='Cuenta no encontrada en el grupo. Contacta al profesor.';errEl.style.display='block';}
+      if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> Entrar al Aula 🚀';}
+      return;
+    }
+    currentStudent=student;
+    viewingParcial=config.activePeriod;
+    studentTab='inicio';
+    if(rem)localStorage.setItem('inf2v2-student',JSON.stringify({mat:student.mat,name:student.name,email}));
+    else localStorage.removeItem('inf2v2-student');
+    document.getElementById('role-bar-student').style.display='flex';
+    document.getElementById('stu-bar-name').textContent=firstNames(student.name)+' · '+getLevel(calcGlobalGrade(student.mat)).badge;
+    speakWelcome(firstNames(student.name));
+    showSection('students');
+    showStudentDash();
+  }catch(e){
+    const msg=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Contraseña incorrecta':
+              e.code==='auth/user-not-found'?'Usuario no encontrado. Verifica tu matrícula':
+              e.code==='auth/too-many-requests'?'Demasiados intentos. Espera unos minutos.':
+              e.code==='auth/invalid-email'?'Formato de usuario inválido':
+              'Error: '+e.code;
+    if(errEl){errEl.textContent=msg;errEl.style.display='block';}
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> Entrar al Aula 🚀';}
+  }
 };
 
-window.logoutStudent=function(){
+window.logoutStudent=async function(){
   currentStudent=null;
   localStorage.removeItem('inf2v2-student');
+  try{await signOut(auth);}catch(e){}
   document.getElementById('role-bar-student').style.display='none';
   showSection('students');
   showStudentLogin();
@@ -676,23 +736,49 @@ function showTeacherLogin(){
   const tp=document.getElementById('tea-panel');
   if(tl)tl.style.display='block';
   if(tp)tp.style.display='none';
-  // Clear password field
   const pwd=document.getElementById('tea-pwd');
+  const user=document.getElementById('tea-user');
+  const err=document.getElementById('tea-error');
   if(pwd)pwd.value='';
+  if(user)user.value='';
+  if(err)err.style.display='none';
 }
 
-window.doTeacherLogin=function(){
-  const pwd=document.getElementById('tea-pwd')?.value||'';
-  if(pwd!==TEACHER_PASS){toast('Contraseña incorrecta');return;}
-  isTeacher=true;
-  document.getElementById('role-bar-teacher').style.display='flex';
-  speakWelcome('Profesor',true);
-  showSection('teacher');
-  showTeacherPanel();
+window.doTeacherLogin=async function(){
+  const userEl=document.getElementById('tea-user');
+  const pwdEl=document.getElementById('tea-pwd');
+  const errEl=document.getElementById('tea-error');
+  const btn=document.getElementById('tea-entrar-btn');
+  const user=(userEl?.value||'').trim();
+  const pwd=pwdEl?.value||'';
+  if(!user){toast('Ingresa tu usuario');return;}
+  if(!pwd){toast('Ingresa tu contraseña');return;}
+  const email=user.includes('@')?user:user+'@master.blackai.com';
+  if(errEl)errEl.style.display='none';
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Verificando...';}
+  try{
+    await signInWithEmailAndPassword(auth,email,pwd);
+    isTeacher=true;
+    document.getElementById('role-bar-teacher').style.display='flex';
+    document.getElementById('tea-bar-label').textContent='Profesor activo — '+email.split('@')[0];
+    speakWelcome(email.split('@')[0],true);
+    showSection('teacher');
+    showTeacherPanel();
+  }catch(e){
+    const msg=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Contraseña incorrecta':
+              e.code==='auth/user-not-found'?'Usuario no encontrado':
+              e.code==='auth/too-many-requests'?'Demasiados intentos. Espera un momento.':
+              'Error de autenticación: '+e.code;
+    if(errEl){errEl.textContent=msg;errEl.style.display='block';}
+    else toast(msg);
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> Entrar al Aula';}
+  }
 };
 
-window.logoutTeacher=function(){
+window.logoutTeacher=async function(){
   isTeacher=false;
+  try{await signOut(auth);}catch(e){}
   document.getElementById('role-bar-teacher').style.display='none';
   showSection('teacher');
   showTeacherLogin();
@@ -2154,6 +2240,63 @@ window.resetRubrics=async function(){
   await saveAll();renderTeacherPanel();toast('Rúbricas restauradas');
 };
 
+
+window.migrateGrades=async function(){
+  if(!confirm('Migrar calificaciones de informatica2v2 al nodo /grades/\n\nEsto sincroniza las calificaciones actuales al portal central del maestro. ¿Continuar?'))return;
+  const btn=document.getElementById('btn-migrate');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Migrando...';}
+  try{
+    const snap=await get(ref(db,'informatica2v2/grades'));
+    if(!snap.exists()){toast('No hay calificaciones para migrar');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-database-export"></i> Migrar calificaciones';}return;}
+    const gradesData=snap.val();
+    const promises=[];
+    let count=0;
+    for(const [mat,parciales] of Object.entries(gradesData)){
+      const syncData={};
+      for(const [pkey,criterios] of Object.entries(parciales||{})){
+        const parcialLabel=pkey==='p1'?'parcial1':pkey==='p2'?'parcial2':'final';
+        // Calculate weighted average for this parcial
+        let total=0,hasAny=false;
+        const detalle={};
+        for(const [ckey,val] of Object.entries(criterios||{})){
+          const crit=CRITERIA.find(c=>c.key===ckey);
+          if(!crit)continue;
+          let score=null;
+          if(typeof val==='object'){
+            const vals=Object.values(val).map(v=>parseFloat(v)).filter(v=>!isNaN(v)&&v>=0);
+            if(vals.length){score=vals.reduce((a,b)=>a+b,0)/vals.length;}
+          } else {
+            score=parseFloat(val);
+            if(isNaN(score))score=null;
+          }
+          if(score!==null){
+            total+=score*(crit.weight/100);
+            hasAny=true;
+            detalle[ckey]=parseFloat(score.toFixed(2));
+          }
+        }
+        syncData[parcialLabel]={
+          score:hasAny?parseFloat(Math.min(10,total).toFixed(2)):null,
+          detalle,
+          updated:Date.now(),
+          materia:'informatica2'
+        };
+      }
+      if(Object.keys(syncData).length){
+        promises.push(set(ref(db,`grades/${mat}/informatica2`),syncData));
+        count++;
+      }
+    }
+    await Promise.all(promises);
+    toast(`✓ ${count} alumnos migrados a /grades/{mat}/informatica2`);
+  }catch(e){
+    toast('Error en migración: '+e.message);
+    console.error(e);
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-database-export"></i> Migrar calificaciones';}
+  }
+};
+
 window.clearAllData=async function(){
   if(!confirm('¿Seguro que deseas borrar TODOS los datos?\n(calificaciones, asistencias, códigos, sesiones, foro)\n\nEsta acción NO se puede deshacer.'))return;
   if(!confirm('CONFIRMACIÓN FINAL: Se borrarán todos los datos del grupo. ¿Continuar?'))return;
@@ -2186,8 +2329,10 @@ function startApp(){
   // Teacher login: Entrar button + Enter key on password
   const teaBtn=document.getElementById('tea-entrar-btn')||document.querySelector('#tea-login .btn-primary');
   if(teaBtn)teaBtn.onclick=window.doTeacherLogin;
-  const teaInput=document.getElementById('tea-pwd');
-  if(teaInput)teaInput.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
+  const teaPwd=document.getElementById('tea-pwd');
+  if(teaPwd)teaPwd.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
+  const teaUser=document.getElementById('tea-user');
+  if(teaUser)teaUser.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
 }
 
 if(document.readyState==='loading'){
