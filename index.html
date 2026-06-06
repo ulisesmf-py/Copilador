@@ -319,8 +319,7 @@ input[type="date"]{color-scheme:dark;}
 </div>
 
 <!-- Content -->
-<div class="sections">
-  <div class="section active" id="students-section">
+<div id="students-section" style="display:block;">
     <div id="stu-login" style="display:block;">
       <div class="login-wrap">
         <div class="login-box">
@@ -330,8 +329,8 @@ input[type="date"]{color-scheme:dark;}
           <div class="form-group">
             <label>Usuario</label>
             <div style="position:relative;">
-              <input id="stu-mat" type="text" placeholder="matricula o usuario" style="padding-right:158px;font-family:var(--font);" autocomplete="username">
-              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(0,180,255,0.5);pointer-events:none;font-family:var(--font);">@student.blackai.com</span>
+              <input id="stu-mat" type="text" placeholder="usuario" style="padding-right:158px;font-family:var(--font);" autocomplete="username">
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(0,180,255,0.5);pointer-events:none;">@student.blackai.com</span>
             </div>
           </div>
           <div class="form-group">
@@ -350,8 +349,9 @@ input[type="date"]{color-scheme:dark;}
     </div>
     <div id="stu-dash" style="display:none;"></div>
   </div>
-  <div class="section" id="teacher-section">
-    <div id="tea-login">
+
+  <div id="teacher-section" style="display:none;">
+    <div id="tea-login" style="display:block;">
       <div class="login-wrap">
         <div class="login-box" style="border-color:rgba(124,58,237,0.25);">
           <div class="login-icon" style="background:linear-gradient(135deg,#2d1b69,#1a0f3c);">
@@ -362,13 +362,13 @@ input[type="date"]{color-scheme:dark;}
           <div class="form-group">
             <label>Usuario</label>
             <div style="position:relative;">
-              <input id="tea-user" type="text" placeholder="usuario" style="padding-right:150px;font-family:var(--font);">
-              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(167,139,250,0.55);pointer-events:none;font-family:var(--font);">@master.blackai.com</span>
+              <input id="tea-user" type="text" placeholder="usuario" style="padding-right:150px;font-family:var(--font);" autocomplete="username">
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(167,139,250,0.55);pointer-events:none;">@master.blackai.com</span>
             </div>
           </div>
           <div class="form-group">
             <label>Contraseña</label>
-            <input id="tea-pwd" type="password" placeholder="••••••••••">
+            <input id="tea-pwd" type="password" placeholder="••••••••••" autocomplete="current-password">
           </div>
           <div id="tea-error" style="display:none;color:var(--red);font-size:14px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:7px;"></div>
           <button id="tea-entrar-btn" class="btn btn-primary btn-full" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;background:rgba(124,58,237,0.12);">
@@ -376,9 +376,9 @@ input[type="date"]{color-scheme:dark;}
           </button>
         </div>
       </div>
-        <div id="tea-panel" style="display:none;"></div>
+    </div>
+    <div id="tea-panel" style="display:none;padding:0 20px 28px;max-width:880px;margin:0 auto;"></div>
   </div>
-</div>
 
 <!-- Celebration -->
 <div class="cel-overlay" id="celebration">
@@ -628,16 +628,10 @@ function showSection(name){
   window._navLock=true;
   clearTimeout(window._navLockTimer);
   window._navLockTimer=setTimeout(()=>{window._navLock=false;},2000);
-
-  const stuSec=document.getElementById('students-section');
-  const teaSec=document.getElementById('teacher-section');
-  // Direct style control - no CSS classes involved
-  if(stuSec)stuSec.style.display=(name==='students')?'block':'none';
-  if(teaSec)teaSec.style.display=(name==='teacher')?'block':'none';
-
-  // Tab button highlighting
-  document.getElementById('tab-students').classList.toggle('active',name==='students');
-  document.getElementById('tab-teacher').classList.toggle('active',name==='teacher');
+  document.getElementById('students-section').style.display = name==='students' ? 'block' : 'none';
+  document.getElementById('teacher-section').style.display  = name==='teacher'  ? 'block' : 'none';
+  document.getElementById('tab-students').classList.toggle('active', name==='students');
+  document.getElementById('tab-teacher').classList.toggle('active',  name==='teacher');
 }
 
 window.showTab=function(name,e){
@@ -800,16 +794,25 @@ window.logoutTeacher=async function(){
 };
 
 function showTeacherPanel(){
-  // Make teacher section visible
-  document.getElementById('teacher-section').style.display='block';
-  // Hide login, show panel
-  const tl=document.getElementById('tea-login');
-  const tp=document.getElementById('tea-panel');
-  if(tl)tl.style.display='none';
-  if(tp)tp.style.display='block';
+  document.getElementById('teacher-section').style.display = 'block';
+  document.getElementById('tea-login').style.display = 'none';
+  document.getElementById('tea-panel').style.display = 'block';
   window.scrollTo({top:0,behavior:'instant'});
   renderTeacherPanel();
 }
+
+function showTeacherLogin(){
+  document.getElementById('teacher-section').style.display = 'block';
+  document.getElementById('tea-login').style.display = 'block';
+  document.getElementById('tea-panel').style.display = 'none';
+  const pwd=document.getElementById('tea-pwd');
+  const user=document.getElementById('tea-user');
+  const err=document.getElementById('tea-error');
+  if(pwd)pwd.value='';
+  if(user)user.value='';
+  if(err)err.style.display='none';
+}
+
 
 // ════════════════════════════════════════
 // STUDENT DASHBOARD
@@ -1845,15 +1848,16 @@ window.setTeacherTab=function(tab){teacherTab=tab;renderTeacherPanel();};
 window.setTeacherStuIdx=function(idx){teacherStudentIdx=idx;renderTeacherPanel();};
 
 function renderTeacherPanel(){
+  if(!isTeacher)return;
   const panel=document.getElementById('tea-panel');
-  if(!panel||!isTeacher)return;
-  _renderTeacherPanelInner(panel);
-}
-function _renderTeacherPanelInner(panel){
-  // Ensure entire chain is visible
+  if(!panel)return;
+  // Always force visible before rendering
   document.getElementById('teacher-section').style.display='block';
   document.getElementById('tea-login').style.display='none';
   panel.style.display='block';
+  _renderTeacherPanelInner(panel);
+}
+function _renderTeacherPanelInner(panel){
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
@@ -2352,37 +2356,35 @@ window.clearAllData=async function(){
 // STARTUP
 // ════════════════════════════════════════
 function startApp(){
-  // Explicitly set initial states before any JS runs
-  const stuS=document.getElementById('students-section');
-  const teaS=document.getElementById('teacher-section');
-  const teaP=document.getElementById('tea-panel');
-  const teaL=document.getElementById('tea-login');
-  if(stuS)stuS.style.display='block';
-  if(teaS)teaS.style.display='none';
-  if(teaP)teaP.style.display='none';
-  if(teaL)teaL.style.display='block';
-  showStudentLogin();
+  // Set initial display state
+  document.getElementById('students-section').style.display = 'block';
+  document.getElementById('teacher-section').style.display  = 'none';
+  document.getElementById('stu-login').style.display  = 'block';
+  document.getElementById('stu-dash').style.display   = 'none';
+  document.getElementById('tea-panel').style.display  = 'none';
+  document.getElementById('tea-login').style.display  = 'block';
 
-  // Wire ALL interactive elements via JS (bypass CSP inline-script restrictions)
-  // Tab buttons
+  // Wire tab buttons
   const stuTab=document.getElementById('tab-students');
   const teaTab=document.getElementById('tab-teacher');
   if(stuTab)stuTab.onclick=(e)=>showTab('students',e);
   if(teaTab)teaTab.onclick=(e)=>showTab('teacher',e);
 
-  // Student login: Entrar button + Enter key on select
-  const stuBtn=document.getElementById('stu-entrar-btn')||document.querySelector('#stu-login .btn-primary');
+  // Wire student login
+  const stuBtn=document.getElementById('stu-entrar-btn');
   if(stuBtn)stuBtn.onclick=window.doLogin;
-  const stuSel=document.getElementById('stu-sel');
-  if(stuSel)stuSel.onkeydown=(e)=>{if(e.key==='Enter')window.doLogin();};
+  const stuMat=document.getElementById('stu-mat');
+  if(stuMat)stuMat.onkeydown=(e)=>{if(e.key==='Enter')window.doLogin();};
+  const stuPwd=document.getElementById('stu-pwd');
+  if(stuPwd)stuPwd.onkeydown=(e)=>{if(e.key==='Enter')window.doLogin();};
 
-  // Teacher login: Entrar button + Enter key on password
-  const teaBtn=document.getElementById('tea-entrar-btn')||document.querySelector('#tea-login .btn-primary');
+  // Wire teacher login
+  const teaBtn=document.getElementById('tea-entrar-btn');
   if(teaBtn)teaBtn.onclick=window.doTeacherLogin;
-  const teaPwd=document.getElementById('tea-pwd');
-  if(teaPwd)teaPwd.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
   const teaUser=document.getElementById('tea-user');
   if(teaUser)teaUser.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
+  const teaPwd=document.getElementById('tea-pwd');
+  if(teaPwd)teaPwd.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
 }
 
 if(document.readyState==='loading'){
