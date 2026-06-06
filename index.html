@@ -1851,7 +1851,6 @@ function renderTeacherPanel(){
   _renderTeacherPanelInner(panel);
 }
 function _renderTeacherPanelInner(panel){
-  try{
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
