@@ -1827,8 +1827,17 @@ window.setTeacherStuIdx=function(idx){teacherStudentIdx=idx;renderTeacherPanel()
 
 function renderTeacherPanel(){
   const panel=document.getElementById('tea-panel');if(!panel)return;
-  // Only render if teacher is logged in
   if(!isTeacher)return;
+  try{_renderTeacherPanelInner(panel);}catch(e){
+    console.error('renderTeacherPanel error:',e);
+    const errDiv=document.createElement('div');
+    errDiv.style.cssText='padding:20px;color:#ff4444;font-family:monospace;';
+    errDiv.textContent='Error: '+e.message+' | '+( e.stack?.split('\n')[1]||'');
+    panel.innerHTML='';
+    panel.appendChild(errDiv);
+  }
+}
+function _renderTeacherPanelInner(panel){
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
