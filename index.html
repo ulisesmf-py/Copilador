@@ -443,7 +443,29 @@ let _fbReady=false;
 // ════════════════════════════════════════
 async function saveAll(){
   document.getElementById('saving-ind').classList.add('show');
+  // Primary save — all app data
   await set(ref(db,PATH),{questions,replies,grades,attendance,sessions,codeSubmissions,config});
+  // Sync grades to /grades/{mat}/informatica2/ for cross-platform visibility
+  try{
+    const syncPromises=[];
+    for(const mat of Object.keys(grades)){
+      const studentGrades=grades[mat];
+      const syncData={};
+      // Map each parcial to the standardized structure
+      for(const [pkey,pdata] of Object.entries(studentGrades)){
+        const parcialLabel=pkey==='p1'?'parcial1':pkey==='p2'?'parcial2':'final';
+        // Calculate final grade for this parcial
+        const fg=calcFinalGrade(mat,pkey);
+        syncData[parcialLabel]={
+          score:fg!==null?parseFloat(fg.toFixed(2)):null,
+          detalle:pdata,
+          updated:Date.now()
+        };
+      }
+      syncPromises.push(set(ref(db,`grades/${mat}/informatica2`),syncData));
+    }
+    if(syncPromises.length)await Promise.all(syncPromises);
+  }catch(e){console.warn('Grade sync error:',e);}
   setTimeout(()=>document.getElementById('saving-ind').classList.remove('show'),800);
 }
 
@@ -1709,6 +1731,13 @@ window.clearActividadGrade=async function(mat,ap,key,sessId){
   renderTeacherPanel();
 };
 
+
+// ── Manual grade sync utility ──
+window.syncGrades=async function(){
+  toast('Sincronizando calificaciones...');
+  await saveAll();
+  toast('✓ Calificaciones sincronizadas a /grades/');
+};
 window.setTeacherTab=function(tab){teacherTab=tab;renderTeacherPanel();};
 window.setTeacherStuIdx=function(idx){teacherStudentIdx=idx;renderTeacherPanel();};
 
