@@ -735,11 +735,19 @@ function showStudentDash(){
 // ════════════════════════════════════════
 // TEACHER AUTH
 // ════════════════════════════════════════
+
+function showTeacherPanel(){
+  document.getElementById('teacher-section').style.display = 'block';
+  document.getElementById('tea-login').style.display = 'none';
+  document.getElementById('tea-panel').style.display = 'block';
+  window.scrollTo({top:0,behavior:'instant'});
+  renderTeacherPanel();
+}
+
 function showTeacherLogin(){
-  const tl=document.getElementById('tea-login');
-  const tp=document.getElementById('tea-panel');
-  if(tl)tl.style.display='block';
-  if(tp)tp.style.display='none';
+  document.getElementById('teacher-section').style.display = 'block';
+  document.getElementById('tea-login').style.display = 'block';
+  document.getElementById('tea-panel').style.display = 'none';
   const pwd=document.getElementById('tea-pwd');
   const user=document.getElementById('tea-user');
   const err=document.getElementById('tea-error');
@@ -767,7 +775,6 @@ window.doTeacherLogin=async function(){
     document.getElementById('tea-bar-label').textContent='Profesor activo — '+user;
     speakWelcome(user,true);
     showSection('teacher');
-    // If Firebase not ready yet, wait for it
     if(!_fbReady){
       loadAll().then(()=>{startListener();showTeacherPanel();});
     } else {
@@ -792,26 +799,6 @@ window.logoutTeacher=async function(){
   showSection('teacher');
   showTeacherLogin();
 };
-
-function showTeacherPanel(){
-  document.getElementById('teacher-section').style.display = 'block';
-  document.getElementById('tea-login').style.display = 'none';
-  document.getElementById('tea-panel').style.display = 'block';
-  window.scrollTo({top:0,behavior:'instant'});
-  renderTeacherPanel();
-}
-
-function showTeacherLogin(){
-  document.getElementById('teacher-section').style.display = 'block';
-  document.getElementById('tea-login').style.display = 'block';
-  document.getElementById('tea-panel').style.display = 'none';
-  const pwd=document.getElementById('tea-pwd');
-  const user=document.getElementById('tea-user');
-  const err=document.getElementById('tea-error');
-  if(pwd)pwd.value='';
-  if(user)user.value='';
-  if(err)err.style.display='none';
-}
 
 
 // ════════════════════════════════════════
