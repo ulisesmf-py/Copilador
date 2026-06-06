@@ -45,8 +45,8 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 
 /* ── Sections ── */
 .sections{padding:0 20px 28px;max-width:880px;margin:0 auto;}
-.section{display:none;}
-.section.active{display:block !important;}
+/* section visibility controlled by JS */
+/* section.active controlled by JS */
 
 /* ── Cards ── */
 .card{background:linear-gradient(145deg,rgba(15,23,41,0.95),rgba(11,17,33,0.98));border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;margin-bottom:.75rem;box-shadow:0 2px 16px rgba(0,0,0,0.25);}
@@ -629,19 +629,13 @@ function showSection(name){
   clearTimeout(window._navLockTimer);
   window._navLockTimer=setTimeout(()=>{window._navLock=false;},2000);
 
-  // Toggle sections via both style and class
   const stuSec=document.getElementById('students-section');
   const teaSec=document.getElementById('teacher-section');
-  if(stuSec){
-    stuSec.style.display=name==='students'?'block':'none';
-    stuSec.classList.toggle('active',name==='students');
-  }
-  if(teaSec){
-    teaSec.style.display=name==='teacher'?'block':'none';
-    teaSec.classList.toggle('active',name==='teacher');
-  }
+  // Direct style control - no CSS classes involved
+  if(stuSec)stuSec.style.display=(name==='students')?'block':'none';
+  if(teaSec)teaSec.style.display=(name==='teacher')?'block':'none';
 
-  // Toggle tab buttons
+  // Tab button highlighting
   document.getElementById('tab-students').classList.toggle('active',name==='students');
   document.getElementById('tab-teacher').classList.toggle('active',name==='teacher');
 }
@@ -806,10 +800,13 @@ window.logoutTeacher=async function(){
 };
 
 function showTeacherPanel(){
+  // Make teacher section visible
+  document.getElementById('teacher-section').style.display='block';
+  // Hide login, show panel
   const tl=document.getElementById('tea-login');
   const tp=document.getElementById('tea-panel');
-  if(tl)tl.style.cssText='display:none!important';
-  if(tp)tp.style.cssText='display:block!important';
+  if(tl)tl.style.display='none';
+  if(tp)tp.style.display='block';
   window.scrollTo({top:0,behavior:'instant'});
   renderTeacherPanel();
 }
@@ -1853,7 +1850,10 @@ function renderTeacherPanel(){
   _renderTeacherPanelInner(panel);
 }
 function _renderTeacherPanelInner(panel){
-  panel.style.display='block'; // Always ensure panel is visible
+  // Ensure entire chain is visible
+  document.getElementById('teacher-section').style.display='block';
+  document.getElementById('tea-login').style.display='none';
+  panel.style.display='block';
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
@@ -2352,7 +2352,15 @@ window.clearAllData=async function(){
 // STARTUP
 // ════════════════════════════════════════
 function startApp(){
-  showSection('students');
+  // Explicitly set initial states before any JS runs
+  const stuS=document.getElementById('students-section');
+  const teaS=document.getElementById('teacher-section');
+  const teaP=document.getElementById('tea-panel');
+  const teaL=document.getElementById('tea-login');
+  if(stuS)stuS.style.display='block';
+  if(teaS)teaS.style.display='none';
+  if(teaP)teaP.style.display='none';
+  if(teaL)teaL.style.display='block';
   showStudentLogin();
 
   // Wire ALL interactive elements via JS (bypass CSP inline-script restrictions)
