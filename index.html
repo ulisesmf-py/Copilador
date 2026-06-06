@@ -806,8 +806,10 @@ window.logoutTeacher=async function(){
 };
 
 function showTeacherPanel(){
-  document.getElementById('tea-login').style.display='none';
-  document.getElementById('tea-panel').style.display='block';
+  const tl=document.getElementById('tea-login');
+  const tp=document.getElementById('tea-panel');
+  if(tl)tl.style.cssText='display:none!important';
+  if(tp)tp.style.cssText='display:block!important';
   window.scrollTo({top:0,behavior:'instant'});
   renderTeacherPanel();
 }
@@ -1851,6 +1853,7 @@ function renderTeacherPanel(){
   _renderTeacherPanelInner(panel);
 }
 function _renderTeacherPanelInner(panel){
+  panel.style.display='block'; // Always ensure panel is visible
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
