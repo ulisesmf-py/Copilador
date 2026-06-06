@@ -507,9 +507,19 @@ async function loadAll(){
 
 // Auto-restore session from Firebase Auth state
 onAuthStateChanged(auth,user=>{
-  if(user&&!currentStudent&&!isTeacher){
-    // Restore student session from Firebase Auth
-    const localPart=user.email.split('@')[0].toLowerCase();
+  if(!user||isTeacher||currentStudent)return;
+  const email=user.email||'';
+  const domain=email.split('@')[1]||'';
+  if(domain==='master.blackai.com'){
+    // Restore teacher session
+    isTeacher=true;
+    document.getElementById('role-bar-teacher').style.display='flex';
+    document.getElementById('tea-bar-label').textContent='Profesor activo — '+email.split('@')[0];
+    if(_fbReady){showSection('teacher');showTeacherPanel();}
+    else{loadAll().then(()=>{startListener();showSection('teacher');showTeacherPanel();});}
+  } else if(domain==='student.blackai.com'){
+    // Restore student session
+    const localPart=email.split('@')[0].toLowerCase();
     const mat=EMAIL_MAP[localPart]||localPart;
     const match=ROSTER.find(r=>r.mat===mat);
     if(match){
@@ -518,6 +528,7 @@ onAuthStateChanged(auth,user=>{
       document.getElementById('role-bar-student').style.display='flex';
       document.getElementById('stu-bar-name').textContent=firstNames(match.name)+' · '+getLevel(calcGlobalGrade(match.mat)).badge;
       if(_fbReady){showSection('students');showStudentDash();}
+      else{loadAll().then(()=>{startListener();showSection('students');showStudentDash();});}
     }
   }
 });
@@ -752,26 +763,31 @@ window.doTeacherLogin=async function(){
   const btn=document.getElementById('tea-entrar-btn');
   const user=(userEl?.value||'').trim();
   const pwd=pwdEl?.value||'';
-  if(!user){toast('Ingresa tu usuario');return;}
-  if(!pwd){toast('Ingresa tu contraseña');return;}
-  const email=user.includes('@')?user:user+'@master.blackai.com';
+  if(!user){if(errEl){errEl.textContent='Ingresa tu usuario';errEl.style.display='block';}return;}
+  if(!pwd){if(errEl){errEl.textContent='Ingresa tu contraseña';errEl.style.display='block';}return;}
   if(errEl)errEl.style.display='none';
   if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Verificando...';}
+  const email=user.includes('@')?user:user+'@master.blackai.com';
   try{
     await signInWithEmailAndPassword(auth,email,pwd);
     isTeacher=true;
     document.getElementById('role-bar-teacher').style.display='flex';
-    document.getElementById('tea-bar-label').textContent='Profesor activo — '+email.split('@')[0];
-    speakWelcome(email.split('@')[0],true);
+    document.getElementById('tea-bar-label').textContent='Profesor activo — '+user;
+    speakWelcome(user,true);
     showSection('teacher');
-    showTeacherPanel();
+    // If Firebase not ready yet, wait for it
+    if(!_fbReady){
+      loadAll().then(()=>{startListener();showTeacherPanel();});
+    } else {
+      showTeacherPanel();
+    }
   }catch(e){
     const msg=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Contraseña incorrecta':
               e.code==='auth/user-not-found'?'Usuario no encontrado':
-              e.code==='auth/too-many-requests'?'Demasiados intentos. Espera un momento.':
-              'Error de autenticación: '+e.code;
+              e.code==='auth/too-many-requests'?'Demasiados intentos. Espera unos minutos.':
+              e.code==='auth/network-request-failed'?'Error de red. Verifica tu conexión.':
+              'Error: '+e.code;
     if(errEl){errEl.textContent=msg;errEl.style.display='block';}
-    else toast(msg);
   }finally{
     if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> Entrar al Aula';}
   }
@@ -1826,16 +1842,9 @@ window.setTeacherTab=function(tab){teacherTab=tab;renderTeacherPanel();};
 window.setTeacherStuIdx=function(idx){teacherStudentIdx=idx;renderTeacherPanel();};
 
 function renderTeacherPanel(){
-  const panel=document.getElementById('tea-panel');if(!panel)return;
-  if(!isTeacher)return;
-  try{_renderTeacherPanelInner(panel);}catch(e){
-    console.error('renderTeacherPanel error:',e);
-    const errDiv=document.createElement('div');
-    errDiv.style.cssText='padding:20px;color:#ff4444;font-family:monospace;';
-    errDiv.textContent='Error: '+e.message+' | '+( e.stack?.split('\n')[1]||'');
-    panel.innerHTML='';
-    panel.appendChild(errDiv);
-  }
+  const panel=document.getElementById('tea-panel');
+  if(!panel||!isTeacher)return;
+  _renderTeacherPanelInner(panel);
 }
 function _renderTeacherPanelInner(panel){
   const ap=config.activePeriod;
