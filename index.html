@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: wss:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
 <title>Informatica II</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <style>
@@ -45,8 +45,8 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 
 /* ── Sections ── */
 .sections{padding:0 20px 28px;max-width:880px;margin:0 auto;}
-/* section visibility controlled by JS */
-/* section.active controlled by JS */
+.section{display:none;}
+.section.active{display:block !important;visibility:visible !important;opacity:1 !important;}
 
 /* ── Cards ── */
 .card{background:linear-gradient(145deg,rgba(15,23,41,0.95),rgba(11,17,33,0.98));border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;margin-bottom:.75rem;box-shadow:0 2px 16px rgba(0,0,0,0.25);}
@@ -213,14 +213,22 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 .terminal-wrap{border:1px solid rgba(0,180,255,0.12);border-radius:9px;overflow:hidden;margin-top:8px;}
 .terminal-header{background:#111827;padding:7px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(0,180,255,0.09);}
 .terminal-title{font-size:18px;color:var(--text3);}
-.terminal-body{background:#090e1a;padding:12px 16px;min-height:160px;max-height:340px;overflow-y:auto;font-family:'Fira Code',monospace;font-size:14px !important;line-height:1.9 !important;white-space:pre-wrap;word-break:break-word;overflow-x:hidden;}
-.tl{line-height:1.6;white-space:pre-wrap;word-break:break-word;font-size:14px;}
+.terminal-body{background:#090e1a;padding:10px 14px;min-height:90px;max-height:180px;overflow-y:auto;font-family:'Fira Code',monospace;font-size:22px !important;line-height:1.9 !important;white-space:pre-wrap;word-break:break-word;overflow-x:hidden;}
+.tl{line-height:1.9 !important;white-space:pre-wrap;word-break:break-word;font-size:22px !important;}
 .t-out{color:#d4d4d4;font-size:22px !important;}.t-err{color:#f44747;font-size:22px !important;}.t-info{color:#569cd6;font-size:22px !important;}.t-success{color:#00ff88;font-size:22px !important;}
 .t-input-label{color:#4ec9b0;}.t-input-field{background:none;border:none;outline:none;color:#fff;font-family:'Fira Code',monospace;font-size:22px;caret-color:#00ff88;min-width:200px;}
 .tcursor{display:inline-block;width:9px;height:16px;background:#00ff88;animation:blink 1s step-end infinite;vertical-align:middle;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
-.kw{color:#569cd6;}.ty{color:#4ec9b0;}.fn{color:#dcdcaa;}.st{color:#ce9178;}.nm{color:#b5cea8;}
-.cm{color:#6a9955;font-style:italic;}.pp{color:#c586c0;}.op{color:#d4d4d4;}.vr{color:#9cdcfe;}.pt{color:#d4d4d4;}
+.kw{color:#569cd6;font-weight:600;}
+.ty{color:#4ec9b0;}
+.fn{color:#dcdcaa;}
+.st{color:#ce9178;}
+.nm{color:#b5cea8;}
+.cm{color:#6a9955;font-style:italic;}
+.op{color:#d4d4d4;}
+.vr{color:#9cdcfe;}
+.pt{color:#ffd700;}
+.pp{color:#c586c0;}
 .color-ref{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
 .color-item{display:flex;align-items:center;gap:8px;}
 .color-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
@@ -268,7 +276,7 @@ input[type="date"]{color-scheme:dark;}
 .sections{border-top:1px solid rgba(0,180,255,0.1);}
 .line-numbers::-webkit-scrollbar{display:none;}
 
-.terminal-body *{font-size:14px!important;font-family:"Fira Code",monospace!important;line-height:1.6!important;}
+.terminal-body *{font-size:22px !important;font-family:'Fira Code',monospace !important;line-height:1.9 !important;}
 .tcursor{width:10px !important;height:18px !important;}
 
 /* ── Black IA Brand ── */
@@ -277,17 +285,6 @@ input[type="date"]{color-scheme:dark;}
 .blackia-text{display:flex;flex-direction:column;}
 .blackia-name{font-size:13px;font-weight:800;letter-spacing:0.12em;color:#f0f4ff;font-family:'Fira Code',monospace;text-transform:uppercase;line-height:1;background:linear-gradient(135deg,#60a5fa,#e0eaff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .topbar-divider{width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 4px;flex-shrink:0;}
-
-/* Float terminal window */
-.term-float-overlay{display:none;position:fixed;inset:0;z-index:9998;pointer-events:none;}
-.term-float-overlay.active{display:block;}
-.term-float{position:fixed;top:80px;right:24px;width:480px;min-height:280px;background:#090e1a;border:1px solid rgba(0,180,255,0.25);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.7);z-index:9999;resize:both;overflow:hidden;pointer-events:all;min-width:320px;}
-.term-float-bar{background:#111827;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;cursor:move;border-bottom:1px solid rgba(0,180,255,0.1);border-radius:12px 12px 0 0;user-select:none;}
-.term-float-title{font-size:13px;color:var(--accent);font-family:'Fira Code',monospace;font-weight:700;}
-.term-float-close{background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.3);color:#ff4444;border-radius:6px;padding:2px 10px;cursor:pointer;font-size:13px;}
-.term-float-body{padding:10px 14px;overflow-y:auto;max-height:400px;min-height:200px;font-family:'Fira Code',monospace;font-size:14px;}
-.float-toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3);cursor:pointer;padding:0 10px;user-select:none;white-space:nowrap;}
-.float-toggle input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -330,66 +327,62 @@ input[type="date"]{color-scheme:dark;}
 </div>
 
 <!-- Content -->
-<div id="students-section" style="display:block;">
+<div class="sections">
+  <div class="section active" id="students-section">
     <div id="stu-login" style="display:block;">
       <div class="login-wrap">
         <div class="login-box">
           <div class="login-icon"><i class="ti ti-terminal-2"></i></div>
           <h2>// Acceso Alumno</h2>
-          <p style="margin-bottom:20px;">Ingresa tus credenciales <b style="color:var(--accent);">@student.blackai.com</b></p>
+          <p>Ingresa tu matrícula y selecciona tu nombre.</p>
           <div class="form-group">
-            <label>Usuario</label>
-            <div style="position:relative;">
-              <input id="stu-mat" type="text" placeholder="usuario" style="padding-right:158px;font-family:var(--font);" autocomplete="username">
-              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(0,180,255,0.5);pointer-events:none;">@student.blackai.com</span>
-            </div>
+            <label>Matrícula</label>
+            <input id="stu-mat" type="text" placeholder="Ej: 262016420" maxlength="12" style="letter-spacing:.05em;">
           </div>
           <div class="form-group">
-            <label>Contraseña</label>
-            <input id="stu-pwd" type="password" placeholder="••••••••••" autocomplete="current-password">
+            <label>Nombre</label>
+            <select id="stu-sel">
+              <option value="">— Selecciona tu nombre —</option>
+              <option value="262016420">CASTRO ROSAS AMERICA NASLIRANI</option>
+              <option value="263046700">GARCIA CASAS EVANY TADEO</option>
+              <option value="262116190">GODINEZ REYES PAOLA NATALI</option>
+              <option value="262116208">GUERRERO GARCIA KARLA MELANY</option>
+              <option value="261065103">LOPEZ MARTINEZ MARTHA REBECA</option>
+              <option value="263036573">PEREZ FLORES BRANDON GAEL</option>
+              <option value="262126256">SALAZAR CARDENAS LESLY VALERIA</option>
+              <option value="263046697">SANCHEZ AVILA IVAN EDAHI</option>
+              <option value="262016326">VELEZ SANCHEZ ANGIE DANIELA</option>
+            </select>
           </div>
-          <div id="stu-error" style="display:none;color:var(--red);font-size:14px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:7px;"></div>
-          <label class="checkbox-row" style="margin-bottom:16px;">
-            <input type="checkbox" id="stu-rem"> Recordar mi sesión
-          </label>
-          <button id="stu-entrar-btn" class="btn btn-primary btn-full">
-            <i class="ti ti-login"></i> Entrar al Aula 🚀
-          </button>
+          <label class="checkbox-row"><input type="checkbox" id="stu-rem"> Recordar sesión</label>
+          <button class="btn btn-primary btn-full" id="stu-entrar-btn"><i class="ti ti-login"></i> Entrar</button>
         </div>
       </div>
     </div>
     <div id="stu-dash" style="display:none;"></div>
   </div>
-
-  <div id="teacher-section" style="display:none;">
-    <div id="tea-login" style="display:block;">
+  <div class="section" id="teacher-section">
+    <div id="tea-login">
       <div class="login-wrap">
-        <div class="login-box" style="border-color:rgba(124,58,237,0.25);">
+        <div class="login-box">
           <div class="login-icon" style="background:linear-gradient(135deg,#2d1b69,#1a0f3c);">
             <i class="ti ti-shield-lock" style="color:#a78bfa;"></i>
           </div>
-          <h2 style="color:#a78bfa;">// Acceso Profesor</h2>
-          <p>Ingresa tus credenciales <b style="color:#a78bfa;">@master.blackai.com</b></p>
-          <div class="form-group">
-            <label>Usuario</label>
-            <div style="position:relative;">
-              <input id="tea-user" type="text" placeholder="usuario" style="padding-right:150px;font-family:var(--font);" autocomplete="username">
-              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(167,139,250,0.55);pointer-events:none;">@master.blackai.com</span>
-            </div>
-          </div>
+          <h2>// Acceso Profesor</h2>
+          <p>Gestiona calificaciones, asistencia, foro y configuración del curso.</p>
           <div class="form-group">
             <label>Contraseña</label>
-            <input id="tea-pwd" type="password" placeholder="••••••••••" autocomplete="current-password">
+            <input id="tea-pwd" type="password" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doTeacherLogin()">
           </div>
-          <div id="tea-error" style="display:none;color:var(--red);font-size:14px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:7px;"></div>
-          <button id="tea-entrar-btn" class="btn btn-primary btn-full" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;background:rgba(124,58,237,0.12);">
-            <i class="ti ti-login"></i> Entrar al Aula
+          <button class="btn btn-primary btn-full" id="tea-entrar-btn" style="border-color:rgba(124,58,237,0.4);color:#a78bfa;">
+            <i class="ti ti-login"></i> Entrar
           </button>
         </div>
       </div>
     </div>
-    <div id="tea-panel" style="display:none;padding:0 20px 28px;max-width:880px;margin:0 auto;"></div>
+    <div id="tea-panel" style="display:none;"></div>
   </div>
+</div>
 
 <!-- Celebration -->
 <div class="cel-overlay" id="celebration">
@@ -405,16 +398,15 @@ input[type="date"]{color-scheme:dark;}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {getDatabase,ref,set,get,onValue} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import {getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const fbApp=initializeApp({apiKey:"AIzaSyDIucPhIp0gSLPcmCUTYrY7CJx5LYBzCQU",authDomain:"foro-ee8a5.firebaseapp.com",databaseURL:"https://foro-ee8a5-default-rtdb.firebaseio.com",projectId:"foro-ee8a5",storageBucket:"foro-ee8a5.firebasestorage.app",messagingSenderId:"548605948271",appId:"1:548605948271:web:6d903b2432429d7a04b89a"});
 const db=getDatabase(fbApp);
-const auth=getAuth(fbApp);
 const PATH='informatica2v2'; // Fresh path — clean slate
 
 // ════════════════════════════════════════
 // CONSTANTS
 // ════════════════════════════════════════
+const TEACHER_PASS='profesor123';
 const ROSTER=[
   {mat:'262016420',name:'CASTRO ROSAS AMERICA NASLIRANI'},
   {mat:'263046700',name:'GARCIA CASAS EVANY TADEO'},
@@ -433,19 +425,6 @@ const DEFAULT_CRITERIA=[
   {key:'analisis',label:'Analisis de Casos',weight:10,icon:'ti-presentation',freq:'parcial'}
 ];
 const PERIODS=[{key:'p1',label:'Primer Parcial',short:'1er Parcial'},{key:'p2',label:'Segundo Parcial',short:'2do Parcial'},{key:'pf',label:'Final',short:'Final'}];
-
-// Email local-part → Matrícula mapping (from @student.blackai.com accounts)
-const EMAIL_MAP={
-  'america':'262016420',
-  'tadeo':'263046700',
-  'natali':'262116190',
-  'melany':'262116208',
-  'martha':'261065103',
-  'brandon':'263036573',
-  'lesly':'262126256',
-  'ivan':'263046697',
-  'angie':'262016326',
-};
 const MAX_FALTAS=3;
 
 // ════════════════════════════════════════
@@ -472,26 +451,7 @@ let _fbReady=false;
 // ════════════════════════════════════════
 async function saveAll(){
   document.getElementById('saving-ind').classList.add('show');
-  // Primary save — all app data
   await set(ref(db,PATH),{questions,replies,grades,attendance,sessions,codeSubmissions,config});
-  // Sync grades to /grades/{mat}/informatica2/ — fire and forget (non-blocking)
-  // Requires Firebase rules to allow write on /grades/ path
-  setTimeout(()=>{
-    try{
-      const syncPromises=[];
-      for(const mat of Object.keys(grades)){
-        const syncData={};
-        for(const [pkey] of Object.entries(grades[mat]||{})){
-          const parcialLabel=pkey==='p1'?'parcial1':pkey==='p2'?'parcial2':'final';
-          const fg=calcFinalGrade(mat,pkey);
-          syncData[parcialLabel]={score:fg!==null?parseFloat(fg.toFixed(2)):null,updated:Date.now()};
-        }
-        if(Object.keys(syncData).length)
-          syncPromises.push(set(ref(db,`grades/${mat}/informatica2`),syncData).catch(()=>{}));
-      }
-      if(syncPromises.length)Promise.all(syncPromises).catch(()=>{});
-    }catch(e){}
-  },0);
   setTimeout(()=>document.getElementById('saving-ind').classList.remove('show'),800);
 }
 
@@ -515,34 +475,6 @@ async function loadAll(){
   updateTopbar();
 }
 
-// Auto-restore session from Firebase Auth state
-onAuthStateChanged(auth,user=>{
-  if(!user||isTeacher||currentStudent)return;
-  const email=user.email||'';
-  const domain=email.split('@')[1]||'';
-  if(domain==='master.blackai.com'){
-    // Restore teacher session
-    isTeacher=true;
-    document.getElementById('role-bar-teacher').style.display='flex';
-    document.getElementById('tea-bar-label').textContent='Profesor activo — '+email.split('@')[0];
-    if(_fbReady){showSection('teacher');showTeacherPanel();}
-    else{loadAll().then(()=>{startListener();showSection('teacher');showTeacherPanel();});}
-  } else if(domain==='student.blackai.com'){
-    // Restore student session
-    const localPart=email.split('@')[0].toLowerCase();
-    const mat=EMAIL_MAP[localPart]||localPart;
-    const match=ROSTER.find(r=>r.mat===mat);
-    if(match){
-      currentStudent=match;
-      viewingParcial=config.activePeriod;
-      document.getElementById('role-bar-student').style.display='flex';
-      document.getElementById('stu-bar-name').textContent=firstNames(match.name)+' · '+getLevel(calcGlobalGrade(match.mat)).badge;
-      if(_fbReady){showSection('students');showStudentDash();}
-      else{loadAll().then(()=>{startListener();showSection('students');showStudentDash();});}
-    }
-  }
-});
-
 function startListener(){
   onValue(ref(db,PATH),snap=>{
     if(!snap.exists()||!_fbReady)return;
@@ -554,19 +486,11 @@ function startListener(){
     updateTopbar();
     // Only re-render if NOT in a login transition
     if(window._navLock)return;
-    // Only re-render the CURRENTLY VISIBLE section
-    const stuVisible=document.getElementById('students-section')?.classList.contains('active');
-    const teaVisible=document.getElementById('teacher-section')?.classList.contains('active');
-    if(isTeacher&&(teaVisible||!stuVisible)){
+    if(isTeacher){
       const ae=document.activeElement;
       const typing=ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT');
-      if(!typing){
-        // Debounce: only re-render after data settles (300ms)
-        clearTimeout(window._teacherRenderTimer);
-        window._teacherRenderTimer=setTimeout(()=>renderTeacherPanel(),300);
-      }
-    }
-    if(currentStudent&&stuVisible){
+      if(!typing)renderTeacherPanel();
+    } else if(currentStudent){
       if(viewingParcial!==config.activePeriod&&studentTab==='inicio')viewingParcial=config.activePeriod;
       if(studentTab==='cpp'||studentTab==='python'||studentTab==='frontend'){
         try{const lv=getLevel(calcGlobalGrade(currentStudent.mat));const b=document.getElementById('stu-bar-name');if(b)b.textContent=firstNames(currentStudent.name)+' · '+lv.badge+' '+lv.name;}catch(ex){}
@@ -635,13 +559,18 @@ function getLevel(avg){
 // NAVIGATION — The only reliable way
 // ════════════════════════════════════════
 function showSection(name){
+  // Set nav lock so Firebase listener doesn't interrupt
   window._navLock=true;
   clearTimeout(window._navLockTimer);
   window._navLockTimer=setTimeout(()=>{window._navLock=false;},2000);
-  document.getElementById('students-section').style.display = name==='students' ? 'block' : 'none';
-  document.getElementById('teacher-section').style.display  = name==='teacher'  ? 'block' : 'none';
-  document.getElementById('tab-students').classList.toggle('active', name==='students');
-  document.getElementById('tab-teacher').classList.toggle('active',  name==='teacher');
+  
+  // Toggle sections
+  document.getElementById('students-section').style.display=name==='students'?'block':'none';
+  document.getElementById('teacher-section').style.display=name==='teacher'?'block':'none';
+  
+  // Toggle tab buttons
+  document.getElementById('tab-students').classList.toggle('active',name==='students');
+  document.getElementById('tab-teacher').classList.toggle('active',name==='teacher');
 }
 
 window.showTab=function(name,e){
@@ -666,71 +595,44 @@ function showStudentLogin(){
   const dashEl=document.getElementById('stu-dash');
   if(loginEl)loginEl.style.display='block';
   if(dashEl)dashEl.style.display='none';
-  // Clear error, restore saved user if remembered
-  const errEl=document.getElementById('stu-error');
-  if(errEl)errEl.style.display='none';
+  // Restore saved session values from localStorage
   try{
     const saved=localStorage.getItem('inf2v2-student');
     if(saved){
       const pf=JSON.parse(saved);
       const matEl=document.getElementById('stu-mat');
+      const selEl=document.getElementById('stu-sel');
       const remEl=document.getElementById('stu-rem');
-      if(matEl&&(pf.mat||pf.email)){matEl.value=pf.email?pf.email.split('@')[0]:pf.mat;}
+      if(matEl&&pf.mat)matEl.value=pf.mat;
+      if(selEl&&pf.mat)selEl.value=pf.mat;
       if(remEl)remEl.checked=true;
     }
   }catch(e){localStorage.removeItem('inf2v2-student');}
 }
 
-window.doLogin=async function(){
-  const userInput=(document.getElementById('stu-mat')?.value||'').trim();
-  const pwd=document.getElementById('stu-pwd')?.value||'';
+window.doLogin=function(){
+  const mat=(document.getElementById('stu-mat')?.value||'').trim();
+  const sel=document.getElementById('stu-sel')?.value||'';
   const rem=document.getElementById('stu-rem')?.checked;
-  const errEl=document.getElementById('stu-error');
-  const btn=document.getElementById('stu-entrar-btn');
-  if(!userInput){if(errEl){errEl.textContent='Ingresa tu usuario';errEl.style.display='block';}return;}
-  if(!pwd){if(errEl){errEl.textContent='Ingresa tu contraseña';errEl.style.display='block';}return;}
-  if(errEl)errEl.style.display='none';
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Verificando...';}
-  const email=userInput.includes('@')?userInput:userInput+'@student.blackai.com';
-  try{
-    const cred=await signInWithEmailAndPassword(auth,email,pwd);
-    const uid=cred.user.uid;
-    // Match student by email/uid against ROSTER
-    // Email format: matricula@student.blackai.com or nombre@student.blackai.com
-    const localPart=email.split('@')[0].toLowerCase();
-    const mat=EMAIL_MAP[localPart]||localPart;
-    const student=ROSTER.find(r=>r.mat===mat);
-    if(!student){
-      if(errEl){errEl.textContent='Cuenta no encontrada en el grupo. Contacta al profesor.';errEl.style.display='block';}
-      if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> Entrar al Aula 🚀';}
-      return;
-    }
-    currentStudent=student;
-    viewingParcial=config.activePeriod;
-    studentTab='inicio';
-    if(rem)localStorage.setItem('inf2v2-student',JSON.stringify({mat:student.mat,name:student.name,email}));
-    else localStorage.removeItem('inf2v2-student');
-    document.getElementById('role-bar-student').style.display='flex';
-    document.getElementById('stu-bar-name').textContent=firstNames(student.name)+' · '+getLevel(calcGlobalGrade(student.mat)).badge;
-    speakWelcome(firstNames(student.name));
-    showSection('students');
-    showStudentDash();
-  }catch(e){
-    const msg=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Contraseña incorrecta':
-              e.code==='auth/user-not-found'?'Usuario no encontrado. Verifica tu matrícula':
-              e.code==='auth/too-many-requests'?'Demasiados intentos. Espera unos minutos.':
-              e.code==='auth/invalid-email'?'Formato de usuario inválido':
-              'Error: '+e.code;
-    if(errEl){errEl.textContent=msg;errEl.style.display='block';}
-  }finally{
-    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> Entrar al Aula 🚀';}
-  }
+  if(!sel){toast('Selecciona tu nombre del listado');return;}
+  if(!mat){toast('Ingresa tu matrícula');return;}
+  const student=ROSTER.find(r=>r.mat===mat&&r.mat===sel);
+  if(!student){toast('Matrícula y nombre no coinciden. Verifica tus datos.');return;}
+  currentStudent=student;
+  viewingParcial=config.activePeriod;
+  studentTab='inicio';
+  if(rem)localStorage.setItem('inf2v2-student',JSON.stringify(student));
+  else localStorage.removeItem('inf2v2-student');
+  document.getElementById('role-bar-student').style.display='flex';
+  document.getElementById('stu-bar-name').textContent=firstNames(student.name)+' · '+getLevel(calcGlobalGrade(student.mat)).badge;
+  speakWelcome(firstNames(student.name));
+  showSection('students');
+  showStudentDash();
 };
 
-window.logoutStudent=async function(){
+window.logoutStudent=function(){
   currentStudent=null;
   localStorage.removeItem('inf2v2-student');
-  try{await signOut(auth);}catch(e){}
   document.getElementById('role-bar-student').style.display='none';
   showSection('students');
   showStudentLogin();
@@ -745,71 +647,38 @@ function showStudentDash(){
 // ════════════════════════════════════════
 // TEACHER AUTH
 // ════════════════════════════════════════
-
-function showTeacherPanel(){
-  document.getElementById('teacher-section').style.display = 'block';
-  document.getElementById('tea-login').style.display = 'none';
-  document.getElementById('tea-panel').style.display = 'block';
-  window.scrollTo({top:0,behavior:'instant'});
-  renderTeacherPanel();
-}
-
 function showTeacherLogin(){
-  document.getElementById('teacher-section').style.display = 'block';
-  document.getElementById('tea-login').style.display = 'block';
-  document.getElementById('tea-panel').style.display = 'none';
+  const tl=document.getElementById('tea-login');
+  const tp=document.getElementById('tea-panel');
+  if(tl)tl.style.display='block';
+  if(tp)tp.style.display='none';
+  // Clear password field
   const pwd=document.getElementById('tea-pwd');
-  const user=document.getElementById('tea-user');
-  const err=document.getElementById('tea-error');
   if(pwd)pwd.value='';
-  if(user)user.value='';
-  if(err)err.style.display='none';
 }
 
-window.doTeacherLogin=async function(){
-  const userEl=document.getElementById('tea-user');
-  const pwdEl=document.getElementById('tea-pwd');
-  const errEl=document.getElementById('tea-error');
-  const btn=document.getElementById('tea-entrar-btn');
-  const user=(userEl?.value||'').trim();
-  const pwd=pwdEl?.value||'';
-  if(!user){if(errEl){errEl.textContent='Ingresa tu usuario';errEl.style.display='block';}return;}
-  if(!pwd){if(errEl){errEl.textContent='Ingresa tu contraseña';errEl.style.display='block';}return;}
-  if(errEl)errEl.style.display='none';
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Verificando...';}
-  const email=user.includes('@')?user:user+'@master.blackai.com';
-  try{
-    await signInWithEmailAndPassword(auth,email,pwd);
-    isTeacher=true;
-    document.getElementById('role-bar-teacher').style.display='flex';
-    document.getElementById('tea-bar-label').textContent='Profesor activo — '+user;
-    speakWelcome(user,true);
-    showSection('teacher');
-    if(!_fbReady){
-      loadAll().then(()=>{startListener();showTeacherPanel();});
-    } else {
-      showTeacherPanel();
-    }
-  }catch(e){
-    const msg=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Contraseña incorrecta':
-              e.code==='auth/user-not-found'?'Usuario no encontrado':
-              e.code==='auth/too-many-requests'?'Demasiados intentos. Espera unos minutos.':
-              e.code==='auth/network-request-failed'?'Error de red. Verifica tu conexión.':
-              'Error: '+e.code;
-    if(errEl){errEl.textContent=msg;errEl.style.display='block';}
-  }finally{
-    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i> Entrar al Aula';}
-  }
+window.doTeacherLogin=function(){
+  const pwd=document.getElementById('tea-pwd')?.value||'';
+  if(pwd!==TEACHER_PASS){toast('Contraseña incorrecta');return;}
+  isTeacher=true;
+  document.getElementById('role-bar-teacher').style.display='flex';
+  speakWelcome('Profesor',true);
+  showSection('teacher');
+  showTeacherPanel();
 };
 
-window.logoutTeacher=async function(){
+window.logoutTeacher=function(){
   isTeacher=false;
-  try{await signOut(auth);}catch(e){}
   document.getElementById('role-bar-teacher').style.display='none';
   showSection('teacher');
   showTeacherLogin();
 };
 
+function showTeacherPanel(){
+  document.getElementById('tea-login').style.display='none';
+  document.getElementById('tea-panel').style.display='block';
+  renderTeacherPanel();
+}
 
 // ════════════════════════════════════════
 // STUDENT DASHBOARD
@@ -1337,11 +1206,8 @@ function buildEditor(mountId,lang,filename,version){
       <button class="run-btn" id="run-${mountId}" title="Ctrl+Enter"><i class="ti ti-player-play-filled"></i> ${isCpp?'Compilar y Ejecutar':'Ejecutar'}</button>
       <button class="clear-btn" id="clr-${mountId}"><i class="ti ti-trash"></i> Limpiar</button>
       <button class="clear-btn" id="fmt-${mountId}"><i class="ti ti-code"></i> Formatear</button>
-      <label class="float-toggle" title="Abrir terminal en ventana flotante">
-        <input type="checkbox" id="float-chk-${mountId}"> <i class="ti ti-picture-in-picture"></i> Ventana
-      </label>
     </div>
-    <div class="terminal-wrap" id="term-wrap-${mountId}">
+    <div class="terminal-wrap">
       <div class="terminal-header">
         <i class="ti ti-terminal" style="color:#00ff88;font-size:15px;"></i>
         <span class="terminal-title">${isCpp?'g++ -std=c++17':'python3'}&nbsp;·&nbsp;output&nbsp;&nbsp;<span style="font-size:12px;color:#3d5170;">Ctrl+Enter = ejecutar</span></span>
@@ -1349,28 +1215,13 @@ function buildEditor(mountId,lang,filename,version){
       </div>
       <div class="terminal-body" id="term-${mountId}"><div class="tl"><span class="tcursor"></span></div></div>
     </div>
-  </div>
-  <div class="term-float-overlay" id="float-overlay-${mountId}">
-    <div class="term-float" id="float-win-${mountId}">
-      <div class="term-float-bar" id="float-bar-${mountId}">
-        <span class="term-float-title"><i class="ti ti-terminal-2"></i> ${filename} — Terminal</span>
-        <button class="term-float-close" id="float-close-${mountId}">✕</button>
-      </div>
-      <div class="term-float-body" id="float-body-${mountId}"></div>
-    </div>
-  </div>\``;
+  </div>`;
 
   const ta  = document.getElementById('ta-'+mountId);
   const hl  = document.getElementById('hl-'+mountId);
   const lnEl= document.getElementById('ln-'+mountId);
   const cur = document.getElementById('cur-'+mountId);
-  const term=document.getElementById('term-'+mountId);
-  // Mirror terminal to float window on any update
-  new MutationObserver(()=>{
-    const _fc=document.getElementById('float-chk-'+mountId);
-    const _fb=document.getElementById('float-body-'+mountId);
-    if(_fc&&_fc.checked&&_fb)_fb.innerHTML=term.innerHTML;
-  }).observe(term,{childList:true,subtree:true});
+  const term= document.getElementById('term-'+mountId);
   const asEl= document.getElementById('as-'+mountId);
   const pnEl= document.getElementById('proj-nm-'+mountId);
   const HL  = isCpp ? hlCpp : hlPy;
@@ -1496,51 +1347,6 @@ function buildEditor(mountId,lang,filename,version){
   });
 
   // ── Run ──
-  // Float terminal toggle
-  const floatChk=document.getElementById('float-chk-'+mountId);
-  const floatOverlay=document.getElementById('float-overlay-'+mountId);
-  const floatBody=document.getElementById('float-body-'+mountId);
-  const floatClose=document.getElementById('float-close-'+mountId);
-  const termWrap=document.getElementById('term-wrap-'+mountId);
-  const termEl=document.getElementById('term-'+mountId);
-
-  // Drag support for float window
-  const floatWin=document.getElementById('float-win-'+mountId);
-  const floatBar=document.getElementById('float-bar-'+mountId);
-  if(floatBar&&floatWin){
-    let dx=0,dy=0,ox=0,oy=0;
-    floatBar.addEventListener('mousedown',e=>{
-      ox=e.clientX-floatWin.getBoundingClientRect().left;
-      oy=e.clientY-floatWin.getBoundingClientRect().top;
-      const move=ev=>{floatWin.style.left=(ev.clientX-ox)+'px';floatWin.style.top=(ev.clientY-oy)+'px';floatWin.style.right='auto';};
-      const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);};
-      document.addEventListener('mousemove',move);
-      document.addEventListener('mouseup',up);
-    });
-  }
-
-  if(floatChk){
-    floatChk.addEventListener('change',()=>{
-      if(floatChk.checked){
-        // Show float window, hide inline terminal
-        if(floatOverlay)floatOverlay.classList.add('active');
-        if(termWrap)termWrap.style.display='none';
-        // Mirror terminal content
-        if(floatBody&&termEl)floatBody.innerHTML=termEl.innerHTML;
-      } else {
-        if(floatOverlay)floatOverlay.classList.remove('active');
-        if(termWrap)termWrap.style.display='block';
-      }
-    });
-  }
-  if(floatClose){
-    floatClose.addEventListener('click',()=>{
-      if(floatChk)floatChk.checked=false;
-      if(floatOverlay)floatOverlay.classList.remove('active');
-      if(termWrap)termWrap.style.display='block';
-    });
-  }
-
   document.getElementById('run-'+mountId).addEventListener('click',()=>{
     term.innerHTML='<div class="tl t-info">// '+(isCpp?'Compilando...':'Ejecutando...')+'</div>';
     setTimeout(()=>isCpp?runCpp(ta.value,term):runPy(ta.value,term),80);
@@ -1667,897 +1473,157 @@ function buildEditor(mountId,lang,filename,version){
 
 
 // ─── C++ Runtime ───
-// ═══════════════════════════════════════════════════════
-// C++ ENGINE v2 — Parser → AST → Async Executor
-// ═══════════════════════════════════════════════════════
-
-function tInputP(term,prompt){return new Promise(r=>tInput(term,prompt,r));}
-function applyOp(cur,op,rv){
-  switch(op){
-    case '=':return rv;
-    case '+=':return (typeof cur==='string'||typeof rv==='string')?String(cur)+String(rv):Number(cur)+Number(rv);
-    case '-=':return Number(cur)-Number(rv);
-    case '*=':return Number(cur)*Number(rv);
-    case '/=':return Number(rv)!==0?Number(cur)/Number(rv):0;
-    case '%=':return Number(rv)!==0?Number(cur)%Number(rv):0;
-    default:return rv;
-  }
-}
-
-// Depth & quote aware utilities
-function indexOfTop(s,op){
-  let depth=0,inS=false,q='';
-  for(let k=0;k<s.length;k++){
-    const ch=s[k];
-    if(inS){if(ch===q&&s[k-1]!=='\\')inS=false;continue;}
-    if(ch==='"'||ch==="'"){inS=true;q=ch;continue;}
-    if('([{'.includes(ch))depth++;
-    else if(')]}'.includes(ch))depth--;
-    if(depth===0&&s.startsWith(op,k)){
-      if(op.length===1){
-        const prev=s[k-1]||'',nx=s[k+1]||'';
-        if((op==='<'||op==='>')&&(nx==='='||nx===op||prev===op))continue;
-        if(op==='/'&&(nx==='='||nx==='/'))continue;
-      }
-      return k;
-    }
-  }
-  return -1;
-}
-function splitTop(s,sep){
-  const parts=[];let depth=0,cur='',inS=false,q='';
-  for(let k=0;k<s.length;k++){
-    const ch=s[k];
-    if(inS){cur+=ch;if(ch===q&&s[k-1]!=='\\')inS=false;continue;}
-    if(ch==='"'||ch==="'"){inS=true;q=ch;cur+=ch;continue;}
-    if('([{'.includes(ch))depth++;
-    else if(')]}'.includes(ch))depth--;
-    if(depth===0&&s.startsWith(sep,k)){parts.push(cur);cur='';k+=sep.length-1;continue;}
-    cur+=ch;
-  }
-  parts.push(cur);
-  return parts.map(p=>p.trim());
-}
-
-// Normalize source → clean line list (braces split, continuations joined)
-function normCpp(raw){
-  // Protect array initializers ={...}
-  const arrInits=[];
-  let s=raw.replace(/=\s*\{[^{}]*\}/g,m=>{arrInits.push(m);return '=@@A'+(arrInits.length-1)+'@@';});
-  // Split } else patterns and braces onto own boundaries
-  s=s.replace(/\}\s*else\s+if\s*\(/g,'}\nelse if(')
-     .replace(/\}\s*else\b/g,'}\nelse')
-     .replace(/\}\s*while\s*\(/g,'}\nwhile(')
-     .replace(/\{/g,'{\n');
-  // Paren-aware semicolon split (protects for(a;b;c) headers)
-  {
-    let out2='',pd=0,inS2=false,q2='';
-    for(let k=0;k<s.length;k++){
-      const ch=s[k];
-      out2+=ch;
-      if(inS2){if(ch===q2&&s[k-1]!=='\\')inS2=false;continue;}
-      if(ch==='"'||ch==="'"){inS2=true;q2=ch;continue;}
-      if(ch==='(')pd++;
-      else if(ch===')')pd--;
-      if(ch===';'&&pd===0)out2+='\n';
-    }
-    s=out2;
-  }
-  // Restore array inits
-  s=s.replace(/=@@A(\d+)@@/g,(_,i2)=>arrInits[Number(i2)]);
-  let ls=s.split('\n').map(l=>l.trim()).filter(Boolean);
-  // Separate trailing } from content: "x; }" handled by ; split; pure "}}"→split
-  const out=[];
-  for(let l of ls){
-    while(l.startsWith('}')&&l.length>1){out.push('}');l=l.slice(1).trim();}
-    if(!l)continue;
-    // line may end with } : "...}" — split off trailing braces if not array
-    let trail=0;
-    while(l.endsWith('}')&&!l.includes('{')){l=l.slice(0,-1).trim();trail++;}
-    if(l)out.push(l);
-    for(let t=0;t<trail;t++)out.push('}');
-  }
-  // Join continuations (cout << "a"\n << endl;)
-  const joined=[];
-  for(let k=0;k<out.length;k++){
-    let cur=out[k];
-    while(k+1<out.length
-      &&!/[;{}]$/.test(cur)
-      &&(/^(<<|>>|&&|\|\||[+\-*\/%.]|==|!=|<=|>=|\?|:)/.test(out[k+1])||/(<<|>>|&&|\|\||[+\-*\/%]|==|!=|<=|>=|\?|:|,)$/.test(cur))){
-      cur+=' '+out[++k];
-    }
-    joined.push(cur);
-  }
-  return joined;
-}
-
-// ── Parser: lines → AST ──
-function parseCppAST(lines){
-  const pos={i:0};
-  return cppStmtList(lines,pos,false);
-}
-function cppStmtList(lines,pos,insideBlock){
-  const stmts=[];
-  while(pos.i<lines.length){
-    const line=lines[pos.i];
-    if(line==='}'){pos.i++;if(insideBlock)return stmts;continue;}
-    const st=cppStmt(lines,pos);
-    if(st)stmts.push(st);
-  }
-  return stmts;
-}
-function cppBody(lines,pos,hasBrace){
-  if(hasBrace)return cppStmtList(lines,pos,true);
-  const st=cppStmt(lines,pos);
-  return st?[st]:[];
-}
-function extractParen(line){
-  const open=line.indexOf('(');
-  if(open===-1)return null;
-  let d=0;
-  for(let k=open;k<line.length;k++){
-    if(line[k]==='(')d++;
-    else if(line[k]===')'){d--;if(d===0)return{inner:line.slice(open+1,k),rest:line.slice(k+1).trim()};}
-  }
-  return null;
-}
-function cppCtrlBody(lines,pos,rest){
-  // rest after ): '{' = block, '' = next line/stmt, 'stmt;' = inline statement
-  if(rest==='{')return cppStmtList(lines,pos,true);
-  if(rest){
-    if(rest.startsWith('{')){
-      // inline open then content was split — treat as block
-      return cppStmtList(lines,pos,true);
-    }
-    return [{t:'s',line:rest.replace(/;$/,'')}];
-  }
-  return cppBody(lines,pos,false);
-}
-function cppStmt(lines,pos){
-  let line=lines[pos.i];
-  if(!line){pos.i++;return null;}
-  if(line==='{'){pos.i++;return {t:'block',body:cppStmtList(lines,pos,true)};}
-  let m;
-  // if / else chain (balanced-paren, inline-stmt support)
-  if(/^if\s*\(/.test(line)){
-    const ex=extractParen(line);
-    if(ex){
-      pos.i++;
-      const body=cppCtrlBody(lines,pos,ex.rest);
-      const chain=[];
-      while(pos.i<lines.length){
-        const el=lines[pos.i];
-        if(/^else\s+if\s*\(/.test(el)){
-          const ex2=extractParen(el);
-          pos.i++;
-          chain.push({cond:ex2.inner,body:cppCtrlBody(lines,pos,ex2.rest)});
-          continue;
-        }
-        const em=el.match(/^else\s*(\{)?\s*(.*)$/);
-        if(em&&el.startsWith('else')){
-          pos.i++;
-          const b=em[1]?cppStmtList(lines,pos,true)
-                 :em[2]?[{t:'s',line:em[2].replace(/;$/,'')}]
-                 :cppBody(lines,pos,false);
-          chain.push({cond:null,body:b});
-          break;
-        }
-        break;
-      }
-      return {t:'if',cond:ex.inner,body,chain};
-    }
-  }
-  // for
-  if(/^for\s*\(/.test(line)){
-    const ex=extractParen(line);
-    if(ex){
-      pos.i++;
-      const body=cppCtrlBody(lines,pos,ex.rest);
-      const parts=splitTop(ex.inner,';');
-      return {t:'for',init:parts[0]||'',cond:parts[1]||'true',inc:parts[2]||'',body};
-    }
-  }
-  // while
-  if(/^while\s*\(/.test(line)){
-    const ex=extractParen(line);
-    if(ex){pos.i++;return {t:'while',cond:ex.inner,body:cppCtrlBody(lines,pos,ex.rest)};}
-  }
-  // do-while
-  m=line.match(/^do\s*(\{)?$/);
-  if(m){
-    pos.i++;
-    const body=cppBody(lines,pos,!!m[1]);
-    let cond='false';
-    if(pos.i<lines.length){
-      const wm=lines[pos.i].match(/^while\s*\((.*)\)\s*;?$/);
-      if(wm){cond=wm[1];pos.i++;}
-    }
-    return {t:'dowhile',cond,body};
-  }
-  // switch
-  m=line.match(/^switch\s*\((.*)\)\s*(\{)?$/);
-  if(m){
-    pos.i++;
-    const body=m[2]?cppStmtList(lines,pos,true):[];
-    return {t:'switch',expr:m[1],body};
-  }
-  // case / default labels
-  m=line.match(/^case\s+(.+?)\s*:\s*(.*)$/);
-  if(m){pos.i++;const lbl={t:'case',val:m[1]};if(m[2])lines.splice(pos.i,0,m[2]);return lbl;}
-  m=line.match(/^default\s*:\s*(.*)$/);
-  if(m){pos.i++;const lbl={t:'default'};if(m[1])lines.splice(pos.i,0,m[1]);return lbl;}
-  // plain statement
-  pos.i++;
-  return {t:'s',line};
-}
-
-// ── User function calls (async, full executor) ──
-let _cppDepth=0;
-async function callCppFn(name,args,fnDefs,term){
-  if(++_cppDepth>60){_cppDepth--;tErr(term,'Recursión demasiado profunda');return 0;}
-  const fn=fnDefs[name];
-  const fe={};
-  fn.params.forEach((p,i)=>{const pm=p.match(/(\w+)\s*$/);if(pm)fe[pm[1]]=args[i];});
-  await runCppAST(fn.ast,fe,fnDefs,term);
-  _cppDepth--;
-  return fe.__return!==undefined?fe.__return:0;
-}
-async function resolveCallsC(expr,env,fnDefs,term){
-  if(!fnDefs)return expr;
-  const names=Object.keys(fnDefs);
-  if(!names.length)return expr;
-  let guard=0,changed=true;
-  while(changed&&guard++<25){
-    changed=false;
-    for(const fname of names){
-      const re=new RegExp('\\b'+fname+'\\s*\\(([^()]*)\\)');
-      const m=expr.match(re);
-      if(m){
-        const args=[];
-        for(const a of splitArgs(m[1]||''))args.push(await aEvalC(a,env,fnDefs,term));
-        const rv=await callCppFn(fname,args,fnDefs,term);
-        expr=expr.replace(m[0],typeof rv==='string'?JSON.stringify(rv):String(rv));
-        changed=true;
-      }
-    }
-  }
-  return expr;
-}
-async function aEvalC(expr,env,fnDefs,term){
-  expr=await resolveCallsC(String(expr),env,fnDefs,term);
-  return evalC(expr,env,fnDefs);
-}
-async function aCondC(cond,env,fnDefs,term){
-  cond=await resolveCallsC(String(cond),env,fnDefs,term);
-  return evalCondC(cond,env,fnDefs);
-}
-
-// ── Executor ──
-async function runCppAST(stmts,env,fnDefs,term){
-  for(const st of stmts){
-    if(env.__return!==undefined||env.__break||env.__cont)return;
-    await execCppStmt(st,env,fnDefs,term);
-  }
-}
-async function execCppStmt(st,env,fnDefs,term){
-  switch(st.t){
-    case 's': await execCppLine(st.line,env,fnDefs,term);break;
-    case 'block': await runCppAST(st.body,env,fnDefs,term);break;
-    case 'if':{
-      if(await aCondC(st.cond,env,fnDefs,term)){
-        await runCppAST(st.body,env,fnDefs,term);
-      } else {
-        for(const br of st.chain){
-          if(br.cond===null||await aCondC(br.cond,env,fnDefs,term)){
-            await runCppAST(br.body,env,fnDefs,term);
-            break;
-          }
-        }
-      }
-      break;
-    }
-    case 'for':{
-      if(st.init)await execCppLine(st.init.replace(/;?$/,';'),env,fnDefs,term);
-      let g=0;
-      while(await aCondC(st.cond,env,fnDefs,term)){
-        if(++g>5000){tErr(term,'Límite de iteraciones (5000)');break;}
-        await runCppAST(st.body,env,fnDefs,term);
-        if(env.__break){delete env.__break;break;}
-        delete env.__cont;
-        if(env.__return!==undefined)return;
-        if(st.inc)await execCppLine(st.inc.replace(/;?$/,';'),env,fnDefs,term);
-      }
-      break;
-    }
-    case 'while':{
-      let g=0;
-      while(await aCondC(st.cond,env,fnDefs,term)){
-        if(++g>5000){tErr(term,'Límite de iteraciones (5000)');break;}
-        await runCppAST(st.body,env,fnDefs,term);
-        if(env.__break){delete env.__break;break;}
-        delete env.__cont;
-        if(env.__return!==undefined)return;
-      }
-      break;
-    }
-    case 'dowhile':{
-      let g=0;
-      do{
-        if(++g>5000){tErr(term,'Límite de iteraciones (5000)');break;}
-        await runCppAST(st.body,env,fnDefs,term);
-        if(env.__break){delete env.__break;break;}
-        delete env.__cont;
-        if(env.__return!==undefined)return;
-      }while(await aCondC(st.cond,env,fnDefs,term));
-      break;
-    }
-    case 'switch':{
-      const val=await aEvalC(st.expr,env,fnDefs,term);
-      let started=false;
-      for(const s2 of st.body){
-        if(s2.t==='case'){
-          if(!started){const cv=await aEvalC(s2.val,env,fnDefs,term);if(cv==val)started=true;}
-        } else if(s2.t==='default'){
-          if(!started)started=true;
-        } else if(started){
-          await execCppStmt(s2,env,fnDefs,term);
-          if(env.__break)break;
-          if(env.__return!==undefined)return;
-        }
-      }
-      delete env.__break;
-      break;
-    }
-    case 'case': case 'default': break;
-  }
-}
-async function execCppLine(line,env,fnDefs,term){
-  line=line.trim().replace(/;$/,'');
-  if(!line||line==='{'||line==='}'||line.startsWith('//'))return;
-  if(line==='break'){env.__break=true;return;}
-  if(line==='continue'){env.__cont=true;return;}
-  let m=line.match(/^return\b\s*(.*)$/);
-  if(m){env.__return=m[1]?await aEvalC(m[1],env,fnDefs,term):0;return;}
-  // getline(cin, var)
-  m=line.match(/^getline\s*\(\s*cin\s*,\s*(\w+)\s*\)$/);
-  if(m){env[m[1]]=await tInputP(term,'');return;}
-  // cin >> a >> b
-  if(/^cin\b/.test(line)){
-    const vars=line.replace(/^cin\s*/,'').split('>>').map(v=>v.trim()).filter(v=>v&&v!=='cin');
-    for(const v of vars){
-      const val=await tInputP(term,'');
-      const parsed=(val===''||isNaN(val))?val:Number(val);
-      const im=v.match(/^(\w+)\[(.+)\]$/);
-      if(im){if(!Array.isArray(env[im[1]]))env[im[1]]=[];env[im[1]][await aEvalC(im[2],env,fnDefs,term)]=parsed;}
-      else env[v]=parsed;
-    }
-    return;
-  }
-  // cout
-  if(/^cout\b/.test(line)){
-    const raw=line.replace(/^cout\s*<<\s*/,'');
-    const parts=splitCout(raw);
-    let out='';
-    for(const p of parts){
-      const pt=p.trim();
-      if(pt==='endl'){tAppend(term,'<div class="tl t-out">'+hEsc(out)+'</div>');out='';continue;}
-      if(pt==='"\\n"'||pt==="'\\n'"){tAppend(term,'<div class="tl t-out">'+hEsc(out)+'</div>');out='';continue;}
-      if(pt.startsWith('"')&&pt.endsWith('"')){
-        const str=pt.slice(1,-1);
-        const segs=str.split('\\n');
-        for(let pi=0;pi<segs.length;pi++){
-          out+=segs[pi].replace(/\\t/g,'    ');
-          if(pi<segs.length-1){tAppend(term,'<div class="tl t-out">'+hEsc(out)+'</div>');out='';}
-        }
-        continue;
-      }
-      if(pt.startsWith("'")&&pt.endsWith("'")){
-        const ch=pt.slice(1,-1);
-        if(ch==='\\n'){tAppend(term,'<div class="tl t-out">'+hEsc(out)+'</div>');out='';continue;}
-        out+=ch==='\\t'?'    ':(ch[0]||'');continue;
-      }
-      const v=await aEvalC(pt,env,fnDefs,term);
-      if(typeof v==='number'&&!Number.isInteger(v))out+=parseFloat(v.toFixed(8)).toString();
-      else out+=(typeof v==='string')?v:String(v);
-    }
-    if(out)tAppend(term,'<div class="tl t-out">'+hEsc(out)+'</div>');
-    return;
-  }
-  // declarations: int a=1, b, c=3;  (also arrays)
-  m=line.match(/^(?:const\s+)?(int|float|double|long(?:\s+long)?|short|unsigned(?:\s+int)?|char|bool|string|auto)(?:\s+const)?\s+(.+)$/);
-  if(m&&!/^(?:int|float|double|long|short|unsigned|char|bool|string|auto)\s+\w+\s*\(/.test(line)){
-    const _isFloat=/^(float|double)$/.test(m[1]);
-    for(const v of splitArgs(m[2])){
-      const arrM=v.match(/^(\w+)\s*\[\s*\d*\s*\]\s*=\s*\{([^}]*)\}$/);
-      const arrE=v.match(/^(\w+)\s*\[\s*(\d+)\s*\]$/);
-      const eqM=v.match(/^(\w+)\s*=\s*([\s\S]+)$/);
-      const nm=v.match(/^(\w+)/);
-      if(arrM){const items=[];for(const x of splitArgs(arrM[2]))items.push(await aEvalC(x,env,fnDefs,term));env[arrM[1]]=items;}
-      else if(arrE){env[arrE[1]]=new Array(Number(arrE[2])).fill(0);}
-      else if(eqM){env[eqM[1]]=await aEvalC(eqM[2],env,fnDefs,term);if(_isFloat){if(!env.__floats)env.__floats=new Set();env.__floats.add(eqM[1]);}}
-      else if(nm){env[nm[1]]=0;if(_isFloat){if(!env.__floats)env.__floats=new Set();env.__floats.add(nm[1]);}}
-    }
-    return;
-  }
-  // increments
-  m=line.match(/^(\w+)\+\+$/)||line.match(/^\+\+(\w+)$/);
-  if(m){env[m[1]]=Number(env[m[1]]||0)+1;return;}
-  m=line.match(/^(\w+)--$/)||line.match(/^--(\w+)$/);
-  if(m){env[m[1]]=Number(env[m[1]]||0)-1;return;}
-  // assignment (incl. compound and array index)
-  m=line.match(/^([\w]+(?:\[[^\]]+\])?)\s*([+\-*\/%]?=)\s*([\s\S]+)$/);
-  if(m&&!/^(if|while|for|switch)\b/.test(line)&&m[2]!=='=='){
-    const[,lhs,op,rhs]=m;
-    const rv=await aEvalC(rhs,env,fnDefs,term);
-    const im=lhs.match(/^(\w+)\[(.+)\]$/);
-    if(im){
-      if(!Array.isArray(env[im[1]]))env[im[1]]=[];
-      const ix=await aEvalC(im[2],env,fnDefs,term);
-      env[im[1]][ix]=applyOp(env[im[1]][ix]??0,op,rv);
-    } else {
-      env[lhs]=applyOp(env[lhs]??0,op,rv);
-    }
-    return;
-  }
-  // bare user function call: fname(args)
-  m=line.match(/^(\w+)\s*\(([\s\S]*)\)$/);
-  if(m&&fnDefs&&fnDefs[m[1]]){
-    const args=[];
-    for(const a of splitArgs(m[2]||''))args.push(await aEvalC(a,env,fnDefs,term));
-    await callCppFn(m[1],args,fnDefs,term);
-    return;
-  }
-  // last resort: evaluate as expression (side-effect free)
-  await aEvalC(line,env,fnDefs,term);
-}
-
-// ── Lint: soft warnings ──
-function cppLint(code){
-  const warns=[];
-  const lines=code.split('\n');
-  for(let i=0;i<lines.length;i++){
-    const l=lines[i].replace(/\/\/.*$/,'').trim();
-    if(!l||/^#/.test(l)||/[;{}:]$/.test(l))continue;
-    if(/^(if|else|for|while|do|switch|case|default)\b/.test(l))continue;
-    if(/^(?:int|float|double|void|string|bool|char)\s+\w+\s*\(/.test(l))continue;
-    const nx=(lines[i+1]||'').trim();
-    if(/^(<<|>>|&&|\|\||[+\-*\/%]|==|!=|<=|>=|\?|:)/.test(nx))continue;
-    if(/(<<|>>|&&|\|\||[+\-*\/%,]|==|!=|<=|>=|\?|:|=)$/.test(l))continue;
-    if(/=|cout|cin|\+\+|--/.test(l))warns.push({ln:i+1,msg:"posible ';' faltante"});
-  }
-  return warns;
-}
-
-// ── Entry point ──
-async function runCpp(code,term){
+function runCpp(code,term){
   term.innerHTML='';
   const ob=(code.match(/{/g)||[]).length,cb=(code.match(/}/g)||[]).length;
-  if(ob!==cb){
-    tErr(term,'Llaves desbalanceadas: '+(ob>cb?('falta'+(ob-cb>1?'n':'')+' '+(ob-cb)+' }'):('sobra'+(cb-ob>1?'n':'')+' '+(cb-ob)+' }')));
-    tAppend(term,'<div class="tl t-err">compilation terminated [exit 1]</div>');
-    return;
-  }
+  if(ob!==cb){tErr(term,`Llaves desbalanceadas: faltan ${ob-cb} }`);tAppend(term,'<div class="tl t-err">compilation terminated [exit 1]</div>');return;}
   if(!code.includes('main')){tErr(term,"función 'main' no encontrada");return;}
-  const warns=cppLint(code);
-  warns.slice(0,4).forEach(w=>tAppend(term,'<div class="tl" style="color:#ffaa44;">// warning línea '+w.ln+': '+hEsc(w.msg)+'</div>'));
   tAppend(term,'<div class="tl t-info">// g++ -std=c++17 ... OK</div>');
   const clean=code.replace(/\/\/[^\n]*/g,'').replace(/\/\*[\s\S]*?\*\//g,'');
   const fnDefs=parseCppFns(clean);
   const mainM=clean.match(/int\s+main\s*\([^)]*\)\s*\{([\s\S]*)$/);
-  if(!mainM){tErr(term,'main no encontrado');return;}
-  let body=mainM[1];
-  // strip the final closing brace of main
-  let d=1,endIdx=body.length;
-  for(let k=0;k<body.length;k++){
-    if(body[k]==='{')d++;
-    else if(body[k]==='}'){d--;if(d===0){endIdx=k;break;}}
-  }
-  body=body.slice(0,endIdx);
-  const env={};
-  _cppDepth=0;
-  try{
-    const ast=parseCppAST(normCpp(body));
-    await runCppAST(ast,env,fnDefs,term);
-    tAppend(term,'<div class="tl t-success">// exit code 0</div>');
-  }catch(e){
-    tErr(term,'Error de ejecución: '+e.message);
-    tAppend(term,'<div class="tl t-err">// exit code 1</div>');
-  }
-  tAppend(term,'<div class="tl"><span class="tcursor"></span></div>');
+  if(!mainM){tErr(term,"main no encontrado");return;}
+  execCpp(flatCpp(mainM[1].replace(/\}\s*$/,'')),{},fnDefs,term,()=>{tAppend(term,'<div class="tl t-success">// exit code 0</div>');tAppend(term,'<div class="tl"><span class="tcursor"></span></div>');});
 }
-function parseCppFns(code){
-  const fns={};
-  const re=/(?:int|float|double|void|string|bool|char|long|auto)\s+(\w+)\s*\(([^)]*)\)\s*\{/g;
-  let m;
-  while((m=re.exec(code))!==null){
-    if(m[1]==='main')continue;
-    let d=1,j=re.lastIndex;
-    while(j<code.length&&d>0){if(code[j]==='{')d++;else if(code[j]==='}')d--;j++;}
-    fns[m[1]]={
-      params:m[2].split(',').map(p=>p.trim()).filter(Boolean),
-      ast:parseCppAST(normCpp(code.slice(re.lastIndex,j-1)))
-    };
+function parseCppFns(code){const fns={};const re=/(\w+)\s+(\w+)\s*\(([^)]*)\)\s*\{/g;let m;while((m=re.exec(code))!==null){if(m[2]==='main')continue;let d=1,j=re.lastIndex;while(j<code.length&&d>0){if(code[j]==='{')d++;else if(code[j]==='}')d--;j++;}fns[m[2]]={params:m[3].split(',').map(p=>p.trim()).filter(Boolean),body:flatCpp(code.slice(re.lastIndex,j-1))};}return fns;}
+function flatCpp(raw){
+  const lines=[];
+  for(let l of raw.split('\n')){
+    l=l.trim();
+    if(!l)continue;
+    // Split "} else if(...){" and "} else {" into separate logical lines
+    if(l.match(/^\}\s*else\s+if/)){lines.push('}');lines.push(l.replace(/^\}\s*/,''));}
+    else if(l.match(/^\}\s*else\s*\{/)){lines.push('}');lines.push('else{');}
+    else if(l.match(/^\}\s*else\s*$/)){lines.push('}');lines.push('else');}
+    else if(l!=='{')lines.push(l);
   }
-  return fns;
+  return lines;
 }
+function execCpp(lines,env,fnDefs,term,done){
+  let i=0;
+  function next(){
+    if(i>=lines.length){done();return;}
+    const line=lines[i++].trim();
+    if(!line||line==='{'||line==='}'||line.startsWith('//'))return next();
+    if(line.startsWith('return')){env.__return=evalC(line.replace(/^return\s*/,'').replace(/;$/,''),env,fnDefs);return done();}
+    if(line==='break'){env.__break=true;return done();}
+    if(line==='continue'){env.__cont=true;return done();}
+    const declM=line.match(/^(?:int|float|double|long|short|unsigned|char|bool|string|auto)(?:\s+const)?\s+(.+);$/);
+    if(declM){splitArgs(declM[1]).forEach(v=>{const arrM=v.match(/^(\w+)\[\d*\]\s*=\s*\{([^}]*)\}$/);const eqM=v.match(/^(\w+)\s*=\s*(.+)$/);const nm=v.match(/^(\w+)/);if(arrM)env[arrM[1]]=arrM[2].split(',').map(x=>evalC(x.trim(),env,fnDefs));else if(eqM)env[eqM[1]]=evalC(eqM[2],env,fnDefs);else if(nm)env[nm[1]]=0;});return next();}
+    const asgM=line.match(/^(\w+(?:\[.+?\])?)\s*([+\-*\/%]?=)\s*(.+);$/);
+    if(asgM&&!['if','while','for','cout','cin'].some(k=>line.startsWith(k))){const[,lhs,op,rhs]=asgM;const idxM=lhs.match(/^(\w+)\[(.+)\]$/);const rv=evalC(rhs,env,fnDefs);if(idxM){if(!Array.isArray(env[idxM[1]]))env[idxM[1]]=[];env[idxM[1]][evalC(idxM[2],env,fnDefs)]=applyOp(env[idxM[1]][evalC(idxM[2],env,fnDefs)]??0,op,rv);}else env[lhs]=applyOp(env[lhs]??0,op,rv);return next();}
+    if(/^(\w+)\+\+;?$/.test(line)||/^\+\+(\w+);?$/.test(line)){const v=(line.match(/\w+/)||[])[0];if(v)env[v]=Number(env[v]||0)+1;return next();}
+    if(/^(\w+)--;?$/.test(line)||/^--(\w+);?$/.test(line)){const v=(line.match(/\w+/)||[])[0];if(v)env[v]=Number(env[v]||0)-1;return next();}
+    if(line.startsWith('cout')){
+      const raw=line.replace(/^cout\s*<<\s*/,'').replace(/;$/,'');
+      const parts=splitCout(raw);let out='';
+      for(const p of parts){
+        const pt=p.trim();
+        if(pt==='endl'){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
+        if(pt==='"\\n"'||pt==="'\\n'"){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
+        if(pt.startsWith('"')&&pt.endsWith('"')){
+          // Handle \n and \t inside strings
 
-function splitCout(s){const p=[];let d=0,c='',inS=false,sq='';for(let i=0;i<s.length;i++){const ch=s[i];if(!inS&&(ch==='"'||ch==="'")){inS=true;sq=ch;c+=ch;continue;}if(inS&&ch===sq&&s[i-1]!=='\\'){inS=false;c+=ch;continue;}if(inS){c+=ch;continue;}if(ch==='('||ch==='[')d++;if(ch===')'||ch===']')d--;if(i<s.length-1&&s[i]==='<'&&s[i+1]==='<'&&d===0){p.push(c.trim());c='';i++;continue;}c+=ch;}if(c.trim())p.push(c.trim());return p;}
-function evalC(expr,env,fnDefs){if(expr===null||expr===undefined)return 0;expr=expr.trim().replace(/;$/,'');if(!expr)return 0;if(expr.startsWith('"')&&expr.endsWith('"'))return expr.slice(1,-1);if(expr.startsWith("'")&&expr.endsWith("'")){const v=expr.slice(1,-1);return v==='\n'?'\n':v[0]||'';}if(expr==='true'||expr==='1')return 1;if(expr==='false'||expr==='0'||expr==='nullptr')return 0;if(/^-?[\d.]+$/.test(expr))return parseFloat(expr);if(expr.startsWith('-')&&/^-\w+$/.test(expr))return-Number(evalC(expr.slice(1),env,fnDefs));if(/^\w+$/.test(expr))return env[expr]!==undefined?env[expr]:0;const idxM=expr.match(/^(\w+)\[(.+)\]$/);if(idxM){const arr=env[idxM[1]],idx=evalC(idxM[2],env,fnDefs);return Array.isArray(arr)?arr[idx]??0:typeof arr==='string'?arr[idx]||'':0;}const strM=expr.match(/^(\w+)\.(size|length)\(\)$/);if(strM){const v=env[strM[1]];return typeof v==='string'?v.length:Array.isArray(v)?v.length:0;}for(const fn of ['sqrt','abs','floor','ceil','round','sin','cos','tan','log','pow','fabs']){const re=new RegExp('^'+fn+'\\((.+)\\)$');const m=expr.match(re);if(m){const args=splitArgs(m[1]).map(a=>evalC(a,env,fnDefs));const mfn=fn==='fabs'?'abs':fn;return Math[mfn]?Math[mfn](...args):args[0];}}const callM=expr.match(/^(\w+)\(([^)]*)\)$/);if(callM&&fnDefs&&fnDefs[callM[1]]){const fn=fnDefs[callM[1]];const args=splitArgs(callM[2]||'').map(a=>evalC(a,env,fnDefs));const fe={...env};fn.params.forEach((p,pi)=>{const pm=p.match(/\w+$/);if(pm)fe[pm[0]]=args[pi];});let ret=0;for(const bl of fn.body){const t=bl.replace(/;$/,'').trim();const rm=t.match(/^return\s+(.+)$/);if(rm){ret=evalC(rm[1],fe,fnDefs);break;}const dm=t.match(/^(?:int|float|double|auto)?\s*(\w+)\s*([+\-*\/]?=)\s*(.+)$/);if(dm)fe[dm[1]]=applyOp(fe[dm[1]]||0,dm[2],evalC(dm[3],fe,fnDefs));}return fe.__return!==undefined?fe.__return:ret;}const _divP=splitTop(expr,'/');
-if(_divP.length===2&&!expr.includes('"')&&!expr.includes("'")){
-  const _fv=env&&env.__floats;
-  const _isF=p=>_fv&&_fv.has(p.trim());
-  if(!_isF(_divP[0])&&!_isF(_divP[1])){
-    const _a=evalC(_divP[0],env,fnDefs),_b=evalC(_divP[1],env,fnDefs);
-    if(typeof _a==='number'&&typeof _b==='number'&&Number.isInteger(_a)&&Number.isInteger(_b)&&!_divP[0].includes('.')&&!_divP[1].includes('.')&&_b!==0){
-      return Math.trunc(_a/_b);
-    }
-  }
-}
-try{let safe=expr.replace(/\btrue\b/g,'1').replace(/\bfalse\b/g,'0').replace(/\bnullptr\b/g,'0').replace(/\b([a-zA-Z_]\w*)\b/g,m=>{if(env[m]!==undefined){const v=env[m];return typeof v==='string'?JSON.stringify(v):Array.isArray(v)?'0':Number(v);}return'0';});return Function('"use strict";return('+safe+')')();}catch(e){return 0;}}
-function evalCondC(cond,env,fnDefs){
-  cond=String(cond).trim();
-  // strip balanced outer parens
-  while(cond.startsWith('(')&&cond.endsWith(')')){
-    let d=0,ok=true;
-    for(let k=0;k<cond.length;k++){
-      if(cond[k]==='(')d++;
-      else if(cond[k]===')'){d--;if(d===0&&k<cond.length-1){ok=false;break;}}
-    }
-    if(ok)cond=cond.slice(1,-1).trim();else break;
-  }
-  if(!cond)return false;
-  const orP=splitTop(cond,'||');
-  if(orP.length>1)return orP.some(c=>evalCondC(c,env,fnDefs));
-  const andP=splitTop(cond,'&&');
-  if(andP.length>1)return andP.every(c=>evalCondC(c,env,fnDefs));
-  if(cond.startsWith('!')&&!cond.startsWith('!='))return !evalCondC(cond.slice(1).trim(),env,fnDefs);
-  for(const[op,fn]of[['<=',(a,b)=>Number(a)<=Number(b)],['>=',(a,b)=>Number(a)>=Number(b)],['!=',(a,b)=>a!=b],['==',(a,b)=>a==b],['<',(a,b)=>Number(a)<Number(b)],['>',(a,b)=>Number(a)>Number(b)]]){
-    const ix=indexOfTop(cond,op);
-    if(ix>0){
-      const a=evalC(cond.slice(0,ix).trim(),env,fnDefs);
-      const b=evalC(cond.slice(ix+op.length).trim(),env,fnDefs);
-      // string comparison stays string; numeric coerces
-      if((op==='==')||(op==='!=')){
-        if(typeof a==='string'||typeof b==='string')return op==='=='?String(a)===String(b):String(a)!==String(b);
+          const str=pt.slice(1,-1);
+          const parts2=str.split('\\n');
+          for(let pi=0;pi<parts2.length;pi++){
+            out+=parts2[pi].replace(/\\t/g,'    ');
+            if(pi<parts2.length-1){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';}
+          }
+          continue;
+        }
+        if(pt.startsWith("'")&&pt.endsWith("'")){
+          const ch=pt.slice(1,-1);
+          if(ch==='\\n'){tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);out='';continue;}
+          out+=ch==='\\t'?'    ':ch[0]||'';continue;
+        }
+        const v=evalC(pt,env,fnDefs);
+        if(typeof v==='number'&&!Number.isInteger(v)){out+=parseFloat(v.toFixed(8)).toString();}
+        else out+=typeof v==='string'?v:String(v);
       }
-      return fn(a,b);
+      if(out)tAppend(term,`<div class="tl t-out">${hEsc(out)}</div>`);
+      return next();
     }
+    if(line.startsWith('cin')){const vars=line.replace(/^cin\s*/,'').replace(/;$/,'').split('>>').map(v=>v.trim()).filter(v=>v&&v!=='cin');if(!vars.length)return next();function askCin(vi){if(vi>=vars.length)return next();tInput(term,'',val=>{env[vars[vi]]=isNaN(val)||val===''?val:Number(val);askCin(vi+1);});}askCin(0);return;}
+    if(line.startsWith('if')||line.startsWith('else')){const blk=collectBlock(lines,i);i=blk.ni;const condM=line.match(/^(?:else\s+)?if\s*\((.+)\)/);const cond=condM?evalCondC(condM[1],env,fnDefs):true;execCpp(cond?blk.body:blk.elseBody,{...env},fnDefs,term,()=>next());return;}
+    if(line.startsWith('for')){const forM=line.match(/^for\s*\(\s*(?:(?:int|float|double|auto)\s+)?(\w+)\s*=\s*([^;]+);\s*([^;]+);\s*(.+)\)/);const blk=collectBlock(lines,i);i=blk.ni;if(!forM)return next();const[,vn,initE,condE,incE]=forM;env[vn]=evalC(initE.trim(),env,fnDefs);let it=0;function fLoop(){it++;if(it>1000){tErr(term,'Límite de iteraciones');return next();}if(!evalCondC(condE.trim(),env,fnDefs))return next();const fe={...env};execCpp([...blk.body],fe,fnDefs,term,()=>{if(fe.__break)return next();Object.assign(env,fe);delete env.__break;delete env.__cont;const inc=incE.trim();if(inc.endsWith('++'))env[vn]=Number(env[vn]||0)+1;else if(inc.endsWith('--'))env[vn]=Number(env[vn]||0)-1;else{const am=inc.match(/(\w+)\s*([+\-*\/]?=)\s*(.+)/);if(am)env[am[1]]=applyOp(env[am[1]]||0,am[2],evalC(am[3],env,fnDefs));}fLoop();});}fLoop();return;}
+    if(line.startsWith('while')){const wM=line.match(/^while\s*\((.+)\)/);const blk=collectBlock(lines,i);i=blk.ni;let wi=0;function wLoop(){wi++;if(wi>1000){tErr(term,'Límite de iteraciones');return next();}if(!evalCondC(wM?wM[1]:'false',env,fnDefs))return next();const we={...env};execCpp([...blk.body],we,fnDefs,term,()=>{if(we.__break)return next();Object.assign(env,we);delete env.__break;delete env.__cont;wLoop();});}wLoop();return;}
+    if(line.startsWith('do')){const blk=collectBlock(lines,i);i=blk.ni;const wl=lines[i]?.trim()||'';const wM=wl.match(/^while\s*\((.+)\);?$/);if(wM)i++;let di=0;function dLoop(){di++;if(di>1000){tErr(term,'Límite de iteraciones');return next();}const de={...env};execCpp([...blk.body],de,fnDefs,term,()=>{Object.assign(env,de);if(de.__break||!evalCondC(wM?wM[1]:'false',env,fnDefs))return next();dLoop();});}dLoop();return;}
+    if(line.startsWith('switch')){const swM=line.match(/^switch\s*\((.+)\)/);const val=swM?evalC(swM[1],env,fnDefs):0;const blk=collectBlock(lines,i);i=blk.ni;const cases=[];let ci=0;while(ci<blk.body.length){const cl=blk.body[ci].trim();const cm=cl.match(/^case\s+(.+):$/);const dm=cl==='default:';if(cm||dm){const cv=cm?evalC(cm[1],env,fnDefs):'__def__';const body=[];ci++;while(ci<blk.body.length&&!blk.body[ci].trim().match(/^case\s+|^default:/)){body.push(blk.body[ci]);ci++;}cases.push({val:cv,body});}else ci++;}let matched=false,broken=false;function runSw(bi){if(bi>=cases.length||broken)return next();const cb=cases[bi];if(!matched&&(cb.val===val||cb.val==='__def__'))matched=true;if(!matched)return runSw(bi+1);execCpp([...cb.body],env,fnDefs,term,()=>{if(env.__break){broken=true;delete env.__break;}runSw(bi+1);});}runSw(0);return;}
+    next();
   }
-  const v=evalC(cond,env,fnDefs);
-  return v!==0&&v!==''&&v!==null&&v!==false&&v!==undefined;
+  next();
 }
+function collectBlock(lines,startIdx){const body=[],elseBody=[];let i=startIdx;if(lines[i]?.trim()==='{')i++;let d=1;while(i<lines.length&&d>0){const l=lines[i].trim();if(l==='}')d--;if(d===0)break;if(l==='{')d++;body.push(lines[i]);i++;}if(lines[i]?.trim()==='}')i++;const el=lines[i]?.trim()||'';if(el.startsWith('else')){i++;if(lines[i]?.trim()==='{')i++;let d2=1;while(i<lines.length&&d2>0){const l=lines[i].trim();if(l==='}')d2--;if(d2===0)break;if(l==='{')d2++;elseBody.push(lines[i]);i++;}if(lines[i]?.trim()==='}')i++;}return{body,elseBody,ni:i};}
+function applyOp(cur,op,rv){if(op==='=')return rv;const n=Number(rv);if(op==='+=')return typeof cur==='string'?cur+rv:Number(cur)+n;if(op==='-=')return Number(cur)-n;if(op==='*=')return Number(cur)*n;if(op==='/=')return n===0?0:Number(cur)/n;if(op==='%=')return Number(cur)%n;return rv;}
+function splitCout(s){const p=[];let d=0,c='',inS=false,sq='';for(let i=0;i<s.length;i++){const ch=s[i];if(!inS&&(ch==='"'||ch==="'")){inS=true;sq=ch;c+=ch;continue;}if(inS&&ch===sq&&s[i-1]!=='\\'){inS=false;c+=ch;continue;}if(inS){c+=ch;continue;}if(ch==='('||ch==='[')d++;if(ch===')'||ch===']')d--;if(i<s.length-1&&s[i]==='<'&&s[i+1]==='<'&&d===0){p.push(c.trim());c='';i++;continue;}c+=ch;}if(c.trim())p.push(c.trim());return p;}
+function evalC(expr,env,fnDefs){if(expr===null||expr===undefined)return 0;expr=expr.trim().replace(/;$/,'');if(!expr)return 0;if(expr.startsWith('"')&&expr.endsWith('"'))return expr.slice(1,-1);if(expr.startsWith("'")&&expr.endsWith("'")){const v=expr.slice(1,-1);return v==='\n'?'\n':v[0]||'';}if(expr==='true'||expr==='1')return 1;if(expr==='false'||expr==='0'||expr==='nullptr')return 0;if(/^-?[\d.]+$/.test(expr))return parseFloat(expr);if(expr.startsWith('-')&&/^-\w+$/.test(expr))return-Number(evalC(expr.slice(1),env,fnDefs));if(/^\w+$/.test(expr))return env[expr]!==undefined?env[expr]:0;const idxM=expr.match(/^(\w+)\[(.+)\]$/);if(idxM){const arr=env[idxM[1]],idx=evalC(idxM[2],env,fnDefs);return Array.isArray(arr)?arr[idx]??0:typeof arr==='string'?arr[idx]||'':0;}const strM=expr.match(/^(\w+)\.(size|length)\(\)$/);if(strM){const v=env[strM[1]];return typeof v==='string'?v.length:Array.isArray(v)?v.length:0;}for(const fn of ['sqrt','abs','floor','ceil','round','sin','cos','tan','log','pow','fabs']){const re=new RegExp('^'+fn+'\\((.+)\\)$');const m=expr.match(re);if(m){const args=splitArgs(m[1]).map(a=>evalC(a,env,fnDefs));const mfn=fn==='fabs'?'abs':fn;return Math[mfn]?Math[mfn](...args):args[0];}}const callM=expr.match(/^(\w+)\(([^)]*)\)$/);if(callM&&fnDefs&&fnDefs[callM[1]]){const fn=fnDefs[callM[1]];const args=splitArgs(callM[2]||'').map(a=>evalC(a,env,fnDefs));const fe={...env};fn.params.forEach((p,pi)=>{const pm=p.match(/\w+$/);if(pm)fe[pm[0]]=args[pi];});let ret=0;for(const bl of fn.body){const t=bl.replace(/;$/,'').trim();const rm=t.match(/^return\s+(.+)$/);if(rm){ret=evalC(rm[1],fe,fnDefs);break;}const dm=t.match(/^(?:int|float|double|auto)?\s*(\w+)\s*([+\-*\/]?=)\s*(.+)$/);if(dm)fe[dm[1]]=applyOp(fe[dm[1]]||0,dm[2],evalC(dm[3],fe,fnDefs));}return fe.__return!==undefined?fe.__return:ret;}try{let safe=expr.replace(/\btrue\b/g,'1').replace(/\bfalse\b/g,'0').replace(/\bnullptr\b/g,'0').replace(/\b([a-zA-Z_]\w*)\b/g,m=>{if(env[m]!==undefined){const v=env[m];return typeof v==='string'?JSON.stringify(v):Array.isArray(v)?'0':Number(v);}return'0';});return Function('"use strict";return('+safe+')')();}catch(e){return 0;}}
+function evalCondC(cond,env,fnDefs){cond=cond.trim();while(cond.startsWith('(')&&cond.endsWith(')'))cond=cond.slice(1,-1).trim();if(!cond)return false;if(cond.includes('&&'))return cond.split('&&').every(c=>evalCondC(c.trim(),env,fnDefs));if(cond.includes('||'))return cond.split('||').some(c=>evalCondC(c.trim(),env,fnDefs));if(cond.startsWith('!')&&!cond.startsWith('!='))return!evalCondC(cond.slice(1).trim(),env,fnDefs);for(const[op,fn]of[['<=',a=>a[0]<=a[1]],['>=',a=>a[0]>=a[1]],['!=',a=>a[0]!=a[1]],['==',a=>a[0]==a[1]],['<',a=>Number(a[0])<Number(a[1])],['>',a=>Number(a[0])>Number(a[1])]]){const idx=cond.indexOf(op);if(idx>0){const a=evalC(cond.slice(0,idx).trim(),env,fnDefs),b=evalC(cond.slice(idx+op.length).trim(),env,fnDefs);return fn([a,b]);}}const v=evalC(cond,env,fnDefs);return v!==0&&v!==''&&v!==null&&v!==false;}
 
 // ─── Python Runtime ───
-// ═══════════════════════════════════════════════════════
-// PYTHON ENGINE v2 — Parser → AST → Async Executor
-// ═══════════════════════════════════════════════════════
-
-function parsePyAST(src){
-  const lines=src.replace(/\t/g,'    ').split('\n')
-    .map((raw,i)=>({ind:raw.match(/^( *)/)[1].length,txt:raw.trim(),ln:i+1}))
-    .filter(l=>l.txt&&!l.txt.startsWith('#'));
-  const pos={i:0};
-  return pyStmtList(lines,pos,0);
+function runPy(code,term){
+  term.innerHTML='';
+  const errs=pyCheck(code);if(errs.length){errs.forEach(e=>tErr(term,e.msg,e.ln));tAppend(term,'<div class="tl t-err">Traceback — abortado</div>');return;}
+  tAppend(term,'<div class="tl t-info">// Python 3.11 ejecutando...</div>');
+  const stmts=code.replace(/\t/g,'    ').split('\n').map((l,i)=>({raw:l,indent:l.match(/^( *)/)[1].length,code:l.trim(),ln:i+1})).filter(s=>s.code&&!s.code.startsWith('#'));
+  const env={},fnDefs={};
+  execPy(stmts,env,fnDefs,term,()=>{tAppend(term,'<div class="tl t-success">// exit code 0</div>');tAppend(term,'<div class="tl"><span class="tcursor"></span></div>');});
 }
-function pyStmtList(lines,pos,minInd){
-  const stmts=[];
-  while(pos.i<lines.length&&lines[pos.i].ind>=minInd){
-    const st=pyStmt(lines,pos);
-    if(st)stmts.push(st);
-  }
-  return stmts;
-}
-function pyBlockOf(lines,pos,parentInd,inline){
-  if(inline&&inline.trim())return [{t:'s',line:inline.trim()}];
-  if(pos.i>=lines.length)return [];
-  const childInd=lines[pos.i].ind;
-  if(childInd<=parentInd)return [];
-  return pyStmtList(lines,pos,childInd);
-}
-function pyStmt(lines,pos){
-  const L=lines[pos.i];const txt=L.txt;const ind=L.ind;
-  let m;
-  m=txt.match(/^if\s+(.+?)\s*:\s*(.*)$/);
-  if(m){
-    pos.i++;
-    const body=pyBlockOf(lines,pos,ind,m[2]);
-    const chain=[];
-    while(pos.i<lines.length&&lines[pos.i].ind===ind){
-      const t2=lines[pos.i].txt;
-      let em=t2.match(/^elif\s+(.+?)\s*:\s*(.*)$/);
-      if(em){pos.i++;chain.push({cond:em[1],body:pyBlockOf(lines,pos,ind,em[2])});continue;}
-      em=t2.match(/^else\s*:\s*(.*)$/);
-      if(em){pos.i++;chain.push({cond:null,body:pyBlockOf(lines,pos,ind,em[1])});break;}
-      break;
-    }
-    return {t:'if',cond:m[1],body,chain};
-  }
-  m=txt.match(/^for\s+([\w\s,]+?)\s+in\s+(.+?)\s*:\s*(.*)$/);
-  if(m){pos.i++;return {t:'for',vars:m[1],iter:m[2],body:pyBlockOf(lines,pos,ind,m[3])};}
-  m=txt.match(/^while\s+(.+?)\s*:\s*(.*)$/);
-  if(m){pos.i++;return {t:'while',cond:m[1],body:pyBlockOf(lines,pos,ind,m[2])};}
-  m=txt.match(/^def\s+(\w+)\s*\(([^)]*)\)\s*:\s*$/);
-  if(m){pos.i++;return {t:'def',name:m[1],params:m[2],body:pyBlockOf(lines,pos,ind,'')};}
-  pos.i++;
-  return {t:'s',line:txt};
-}
-
-// ── User function calls ──
-let _pyDepth=0;
-async function callPyFn(name,args,fnDefs,term){
-  if(++_pyDepth>60){_pyDepth--;tErr(term,'Recursión demasiado profunda');return null;}
-  const fn=fnDefs[name];
-  const fe={};
-  fn.params.split(',').map(p=>p.trim()).filter(Boolean).forEach((p,i)=>{
-    const dm=p.match(/^(\w+)\s*=\s*(.+)$/);
-    if(dm){fe[dm[1]]=args[i]!==undefined?args[i]:evalPy(dm[2],{},fnDefs);}
-    else fe[p]=args[i];
-  });
-  await runPyAST(fn.body,fe,fnDefs,term);
-  _pyDepth--;
-  return fe.__return!==undefined?fe.__return:null;
-}
-async function resolveCallsPy(expr,env,fnDefs,term){
-  if(!fnDefs)return expr;
-  const names=Object.keys(fnDefs);
-  if(!names.length)return expr;
-  let guard=0,changed=true;
-  while(changed&&guard++<25){
-    changed=false;
-    for(const fname of names){
-      const re=new RegExp('\\b'+fname+'\\s*\\(([^()]*)\\)');
-      const m=expr.match(re);
-      if(m){
-        const args=[];
-        for(const a of splitArgs(m[1]||''))args.push(await aEvalPy(a,env,fnDefs,term));
-        const rv=await callPyFn(fname,args,fnDefs,term);
-        const lit=rv===null?'None':rv===true?'True':rv===false?'False':typeof rv==='string'?JSON.stringify(rv):Array.isArray(rv)?JSON.stringify(rv):String(rv);
-        expr=expr.replace(m[0],lit);
-        changed=true;
-      }
-    }
-  }
-  return expr;
-}
-async function aEvalPy(expr,env,fnDefs,term){
-  expr=await resolveCallsPy(String(expr),env,fnDefs,term);
-  return evalPy(expr,env,fnDefs);
-}
-async function aCondPy(cond,env,fnDefs,term){
-  cond=await resolveCallsPy(String(cond),env,fnDefs,term);
-  return evalCondPy(cond,env,fnDefs);
-}
-
-// ── Executor ──
-async function runPyAST(stmts,env,fnDefs,term){
-  for(const st of stmts){
-    if(env.__return!==undefined||env.__break||env.__cont)return;
-    await execPyStmt(st,env,fnDefs,term);
-  }
-}
-async function execPyStmt(st,env,fnDefs,term){
-  switch(st.t){
-    case 's': await execPyLine(st.line,env,fnDefs,term);break;
-    case 'def': fnDefs[st.name]={params:st.params,body:st.body};break;
-    case 'if':{
-      if(await aCondPy(st.cond,env,fnDefs,term)){
-        await runPyAST(st.body,env,fnDefs,term);
-      } else {
-        for(const br of st.chain){
-          if(br.cond===null||await aCondPy(br.cond,env,fnDefs,term)){
-            await runPyAST(br.body,env,fnDefs,term);
-            break;
-          }
+function pyCheck(code){const errs=[];code.split('\n').forEach((l,i)=>{const t=l.trim();if(!t||t.startsWith('#'))return;if(/^(?:def|if|elif|else|for|while|class|with|try|except|finally)\b/.test(t)&&!t.endsWith(':')&&!t.endsWith('\\'))errs.push({msg:"se esperaba ':' al final",ln:i+1});});return errs;}
+function getBlock(stmts,fromIdx,pind){const b=[];let j=fromIdx;while(j<stmts.length&&stmts[j].indent>pind){b.push(stmts[j]);j++;}return b;}
+function execPy(stmts,env,fnDefs,term,done){
+  let i=0;
+  function next(){
+    if(i>=stmts.length)return done();
+    const s=stmts[i++];const line=s.code;
+    if(!line||line.startsWith('#'))return next();
+    if(line.startsWith('print(')){
+      const inner=line.slice(6,-1).trim();
+      if(!inner){tAppend(term,'<div class="tl t-out"></div>');return next();}
+      const args=splitArgs(inner);const kwargs={};const pos=[];
+      for(const a of args){const kw=a.match(/^(sep|end)\s*=\s*(.+)$/);if(kw)kwargs[kw[1]]=evalPy(kw[2],env,fnDefs);else pos.push(evalPy(a,env,fnDefs));}
+      const sep=kwargs.sep!==undefined?String(kwargs.sep):' ';
+      const endCh=kwargs.end!==undefined?String(kwargs.end):'\n';
+      const fmt=v=>v===null?'None':v===true?'True':v===false?'False':Array.isArray(v)?'['+v.map(x=>typeof x==='string'?JSON.stringify(x):String(x)).join(', ')+']':typeof v==='number'&&!Number.isInteger(v)?parseFloat(v.toFixed(10)).toString():String(v);
+      const out=pos.map(fmt).join(sep);
+      // Handle \n within the output string
+      const lines2=out.split('\n');
+      for(let li=0;li<lines2.length;li++){
+        if(li<lines2.length-1||(li===lines2.length-1&&endCh==='\n')){
+          tAppend(term,`<div class="tl t-out">${hEsc(lines2[li])}</div>`);
+        }else if(lines2[li]){
+          tAppend(term,`<div class="tl t-out">${hEsc(lines2[li]+endCh)}</div>`);
         }
       }
-      break;
+      return next();
     }
-    case 'while':{
-      let g=0;
-      while(await aCondPy(st.cond,env,fnDefs,term)){
-        if(++g>10000){tErr(term,'Límite de iteraciones (10000)');break;}
-        await runPyAST(st.body,env,fnDefs,term);
-        if(env.__break){delete env.__break;break;}
-        delete env.__cont;
-        if(env.__return!==undefined)return;
-      }
-      break;
+    const inpM=line.match(/^(\w+)\s*=\s*(int|float|str)?\s*\(?\s*input\s*\(([^)]*)\)\s*\)?$/);
+    if(inpM){let prompt=inpM[3]?.trim()||'';if(/^["'].*["']$/.test(prompt))prompt=prompt.slice(1,-1);tInput(term,prompt,val=>{env[inpM[1]]=inpM[2]==='int'?parseInt(val)||0:inpM[2]==='float'?parseFloat(val)||0:val;next();});return;}
+    const frM=line.match(/^for\s+(\w+)\s+in\s+range\(([^)]+)\)\s*:$/);
+    if(frM){const args=splitArgs(frM[2]).map(a=>Number(evalPy(a,env,fnDefs)));let st=0,sp=0,step=1;if(args.length===1)sp=args[0];else if(args.length===2){st=args[0];sp=args[1];}else{st=args[0];sp=args[1];step=args[2];}const body=getBlock(stmts,i,s.indent);i+=body.length;let c=st,it=0;function fL(){it++;if(it>1000){tErr(term,'Límite de iteraciones');return next();}if((step>0&&c>=sp)||(step<0&&c<=sp))return next();env[frM[1]]=c;execPy([...body],env,fnDefs,term,()=>{if(env.__break){delete env.__break;return next();}c+=step;fL();});}fL();return;}
+    const flM=line.match(/^for\s+(\w+)\s+in\s+(.+)\s*:$/);
+    if(flM){let items=evalPy(flM[2],env,fnDefs);if(!Array.isArray(items))items=String(items).split('');const body=getBlock(stmts,i,s.indent);i+=body.length;let ci=0;function fIt(){if(ci>=items.length)return next();env[flM[1]]=items[ci++];execPy([...body],env,fnDefs,term,()=>{if(env.__break){delete env.__break;return next();}fIt();});}fIt();return;}
+    const wM=line.match(/^while\s+(.+)\s*:$/);
+    if(wM){const body=getBlock(stmts,i,s.indent);i+=body.length;let wi=0;function wL(){wi++;if(wi>1000){tErr(term,'Límite de iteraciones');return next();}if(!evalCondPy(wM[1],env,fnDefs))return next();execPy([...body],env,fnDefs,term,()=>{if(env.__break){delete env.__break;return next();}wL();});}wL();return;}
+    if(/^if\s+.+:$/.test(line)){
+      const cond=line.slice(3,-1).trim();const body=getBlock(stmts,i,s.indent);i+=body.length;
+      let elseBody=[];
+      while(i<stmts.length&&stmts[i].indent===s.indent&&/^elif\s+|^else:$/.test(stmts[i].code)){const es=stmts[i];i++;const eb=getBlock(stmts,i,s.indent);i+=eb.length;if(es.code==='else:'){elseBody=eb;break;}const ec=es.code.match(/^elif\s+(.+):$/);if(ec&&!evalCondPy(cond,env,fnDefs)&&evalCondPy(ec[1],env,fnDefs)){elseBody=eb;break;}}
+      execPy(evalCondPy(cond,env,fnDefs)?body:elseBody,env,fnDefs,term,next);return;
     }
-    case 'for':{
-      let iterable;
-      let mm=st.iter.match(/^range\s*\((.*)\)$/);
-      if(mm){
-        const args=[];
-        for(const a of splitArgs(mm[1]))args.push(Number(await aEvalPy(a,env,fnDefs,term)));
-        let s=0,e=0,step=1;
-        if(args.length===1)e=args[0];
-        else if(args.length===2){s=args[0];e=args[1];}
-        else{s=args[0];e=args[1];step=args[2]||1;}
-        iterable=[];
-        if(step>0)for(let v=s;v<e;v+=step)iterable.push(v);
-        else if(step<0)for(let v=s;v>e;v+=step)iterable.push(v);
-      } else if((mm=st.iter.match(/^enumerate\s*\((.+)\)$/))){
-        const base=await aEvalPy(mm[1],env,fnDefs,term);
-        const arr=Array.isArray(base)?base:typeof base==='string'?base.split(''):[];
-        iterable=arr.map((x,i)=>[i,x]);
-      } else {
-        const it=await aEvalPy(st.iter,env,fnDefs,term);
-        if(Array.isArray(it))iterable=it;
-        else if(typeof it==='string')iterable=it.split('');
-        else if(it&&typeof it==='object')iterable=Object.keys(it);
-        else iterable=[];
-      }
-      const vars=st.vars.split(',').map(v=>v.trim()).filter(Boolean);
-      let g=0;
-      for(const item of iterable){
-        if(++g>10000){tErr(term,'Límite de iteraciones (10000)');break;}
-        if(vars.length===1)env[vars[0]]=item;
-        else if(Array.isArray(item))vars.forEach((v,vi)=>{env[v]=item[vi];});
-        else env[vars[0]]=item;
-        await runPyAST(st.body,env,fnDefs,term);
-        if(env.__break){delete env.__break;break;}
-        delete env.__cont;
-        if(env.__return!==undefined)return;
-      }
-      break;
-    }
+    const defM=line.match(/^def\s+(\w+)\s*\(([^)]*)\)\s*:$/);
+    if(defM){const body=getBlock(stmts,i,s.indent);i+=body.length;fnDefs[defM[1]]={params:defM[2].split(',').map(p=>p.trim()).filter(Boolean),body};return next();}
+    if(line==='break'){env.__break=true;i=stmts.length;return next();}
+    if(line==='continue'||line==='pass')return next();
+    if(line.startsWith('return')){env.__return=evalPy(line.slice(6).trim(),env,fnDefs);i=stmts.length;return next();}
+    const asgM=line.match(/^(\w+(?:\[.+?\])?)\s*([+\-*\/%]?=)\s*(.+)$/);
+    if(asgM&&!['if','elif','else','for','while','def','class','return'].some(k=>line.startsWith(k))){const[,lhs,op,rhs]=asgM;const rv=evalPy(rhs,env,fnDefs);const idxM=lhs.match(/^(\w+)\[(.+)\]$/);if(idxM){const obj=env[idxM[1]],idx=evalPy(idxM[2],env,fnDefs);if(Array.isArray(obj))obj[idx]=rv;else if(typeof obj==='object'&&obj)obj[idx]=rv;}else env[lhs]=applyOp(env[lhs]??0,op,rv);return next();}
+    try{evalPy(line,env,fnDefs);}catch(e){}
+    next();
   }
+  next();
 }
-function pyFmt(v){
-  if(v===null||v===undefined)return 'None';
-  if(v===true)return 'True';
-  if(v===false)return 'False';
-  if(Array.isArray(v))return '['+v.map(x=>typeof x==='string'?"'"+x+"'":pyFmt(x)).join(', ')+']';
-  if(typeof v==='number'&&!Number.isInteger(v))return parseFloat(v.toFixed(10)).toString();
-  if(typeof v==='object')return '{'+Object.entries(v).map(([k,x])=>"'"+k+"': "+(typeof x==='string'?"'"+x+"'":pyFmt(x))).join(', ')+'}';
-  return String(v);
-}
-async function execPyLine(line,env,fnDefs,term){
-  line=line.trim();
-  if(!line||line.startsWith('#'))return;
-  if(line==='break'){env.__break=true;return;}
-  if(line==='continue'){env.__cont=true;return;}
-  if(line==='pass')return;
-  let m=line.match(/^return\b\s*(.*)$/);
-  if(m){env.__return=m[1]?await aEvalPy(m[1],env,fnDefs,term):null;return;}
-  // input assignments (int/float/plain)
-  m=line.match(/^(\w+)\s*=\s*int\s*\(\s*input\s*\((.*)\)\s*\)\s*$/);
-  if(m){const p=m[2]?String(evalPy(m[2],env,fnDefs)):'';const v=await tInputP(term,p);env[m[1]]=parseInt(v,10)||0;return;}
-  m=line.match(/^(\w+)\s*=\s*float\s*\(\s*input\s*\((.*)\)\s*\)\s*$/);
-  if(m){const p=m[2]?String(evalPy(m[2],env,fnDefs)):'';const v=await tInputP(term,p);env[m[1]]=parseFloat(v)||0;return;}
-  m=line.match(/^(\w+)\s*=\s*input\s*\((.*)\)\s*$/);
-  if(m){const p=m[2]?String(evalPy(m[2],env,fnDefs)):'';env[m[1]]=await tInputP(term,p);return;}
-  // print(...)
-  if(/^print\s*\(/.test(line)){
-    const inner=line.replace(/^print\s*\(/,'').replace(/\)\s*$/,'');
-    if(!inner.trim()){tAppend(term,'<div class="tl t-out"></div>');return;}
-    const args=splitArgs(inner);
-    const kwargs={};const posArgs=[];
-    for(const a of args){
-      const kw=a.match(/^(sep|end)\s*=\s*(.+)$/);
-      if(kw)kwargs[kw[1]]=await aEvalPy(kw[2],env,fnDefs,term);
-      else posArgs.push(await aEvalPy(a,env,fnDefs,term));
-    }
-    const sep=kwargs.sep!==undefined?String(kwargs.sep):' ';
-    const endCh=kwargs.end!==undefined?String(kwargs.end):'\n';
-    const out=posArgs.map(pyFmt).join(sep);
-    const lines2=out.split('\n');
-    for(let li=0;li<lines2.length;li++){
-      if(li<lines2.length-1)tAppend(term,'<div class="tl t-out">'+hEsc(lines2[li])+'</div>');
-      else if(endCh.includes('\n'))tAppend(term,'<div class="tl t-out">'+hEsc(lines2[li])+'</div>');
-      else if(lines2[li])tAppend(term,'<div class="tl t-out">'+hEsc(lines2[li]+endCh.replace(/\n/g,''))+'</div>');
-    }
-    return;
-  }
-  // list method statements: lst.append(x) etc
-  m=line.match(/^(\w+)\.(append|pop|remove|insert|sort|reverse|clear|extend)\s*\((.*)\)\s*$/);
-  if(m){
-    const arr=env[m[1]];
-    if(Array.isArray(arr)){
-      const args=[];
-      for(const a of splitArgs(m[3]||''))if(a)args.push(await aEvalPy(a,env,fnDefs,term));
-      switch(m[2]){
-        case 'append':arr.push(args[0]);break;
-        case 'pop':args.length?arr.splice(args[0],1):arr.pop();break;
-        case 'remove':{const ix=arr.indexOf(args[0]);if(ix>-1)arr.splice(ix,1);break;}
-        case 'insert':arr.splice(args[0],0,args[1]);break;
-        case 'sort':arr.sort((a,b)=>typeof a==='number'?a-b:String(a).localeCompare(String(b)));break;
-        case 'reverse':arr.reverse();break;
-        case 'clear':arr.length=0;break;
-        case 'extend':if(Array.isArray(args[0]))arr.push(...args[0]);break;
-      }
-    }
-    return;
-  }
-  // tuple/multi assignment: a, b = 1, 2
-  m=line.match(/^([\w\s,]+?)\s*=\s*(.+)$/);
-  if(m&&m[1].includes(',')&&!/[=<>!]=/.test(line)){
-    const targets=m[1].split(',').map(t=>t.trim());
-    const vals=[];
-    for(const v of splitArgs(m[2]))vals.push(await aEvalPy(v,env,fnDefs,term));
-    targets.forEach((t,i)=>{env[t]=vals.length===1&&Array.isArray(vals[0])?vals[0][i]:vals[i];});
-    return;
-  }
-  // indexed assignment: x[i] = v   / dict[k] = v
-  m=line.match(/^(\w+)\[(.+?)\]\s*([+\-*\/]?=)\s*(.+)$/);
-  if(m&&!/[=<>!]==/.test(line)){
-    const obj=env[m[1]];
-    const key=await aEvalPy(m[2],env,fnDefs,term);
-    const rv=await aEvalPy(m[4],env,fnDefs,term);
-    if(Array.isArray(obj)||typeof obj==='object'&&obj!==null){
-      const cur=Array.isArray(obj)?(obj[key]??0):(obj[key]??0);
-      obj[key]=m[3]==='='?rv:applyOp(cur,m[3],rv);
-    }
-    return;
-  }
-  // simple/compound assignment
-  m=line.match(/^(\w+)\s*([+\-*\/%]?=|\/\/=|\*\*=)\s*(.+)$/);
-  if(m&&m[2]!=='=='&&!/^(if|elif|while|for)\b/.test(line)){
-    const rv=await aEvalPy(m[3],env,fnDefs,term);
-    if(m[2]==='=')env[m[1]]=rv;
-    else if(m[2]==='//=')env[m[1]]=Math.floor(Number(env[m[1]]||0)/Number(rv));
-    else if(m[2]==='**=')env[m[1]]=Math.pow(Number(env[m[1]]||0),Number(rv));
-    else env[m[1]]=applyOp(env[m[1]]??0,m[2],rv);
-    return;
-  }
-  // bare user function call
-  m=line.match(/^(\w+)\s*\(([\s\S]*)\)\s*$/);
-  if(m&&fnDefs&&fnDefs[m[1]]){
-    const args=[];
-    for(const a of splitArgs(m[2]||''))if(a)args.push(await aEvalPy(a,env,fnDefs,term));
-    await callPyFn(m[1],args,fnDefs,term);
-    return;
-  }
-  // expression fallback
-  await aEvalPy(line,env,fnDefs,term);
-}
-
-// ── Entry point ──
-async function runPy(code,term){
-  term.innerHTML='';
-  const errs=pyCheck(code);
-  if(errs.length){
-    errs.forEach(e=>tErr(term,e.msg,e.ln));
-    tAppend(term,'<div class="tl t-err">SyntaxError — abortado</div>');
-    return;
-  }
-  tAppend(term,'<div class="tl t-info">// Python 3.11 ejecutando...</div>');
-  const env={},fnDefs={};
-  _pyDepth=0;
-  try{
-    const ast=parsePyAST(code);
-    await runPyAST(ast,env,fnDefs,term);
-    tAppend(term,'<div class="tl t-success">// exit code 0</div>');
-  }catch(e){
-    tErr(term,'Error de ejecución: '+e.message);
-    tAppend(term,'<div class="tl t-err">// exit code 1</div>');
-  }
-  tAppend(term,'<div class="tl"><span class="tcursor"></span></div>');
-}
-function pyCheck(code){
-  const errs=[];
-  code.split('\n').forEach((l,i)=>{
-    const t=l.trim();
-    if(!t||t.startsWith('#'))return;
-    if(/^(?:def|if|elif|else|for|while|class|with|try|except|finally)\b/.test(t)&&!t.includes(':'))
-      errs.push({msg:"se esperaba ':' al final",ln:i+1});
-  });
-  // paren balance
-  let depth=0;
-  for(const ch of code){if('([{'.includes(ch))depth++;else if(')]}'.includes(ch))depth--;}
-  if(depth!==0)errs.push({msg:'paréntesis desbalanceados',ln:0});
-  return errs;
-}
-
 function evalPy(expr,env,fnDefs){
-  // Floor division a // b (JS treats // as comment)
-  {
-    const _fd=splitTop(String(expr),'//');
-    if(_fd.length===2&&_fd[0]&&_fd[1]){
-      const _a=evalPy(_fd[0],env,fnDefs),_b=evalPy(_fd[1],env,fnDefs);
-      if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return Math.floor(_a/_b);
-    }
-  }
   if(expr===null||expr===undefined)return null;expr=String(expr).trim();if(!expr)return'';
   if(expr==='None')return null;if(expr==='True')return true;if(expr==='False')return false;
   if(/^[frFR]["']/.test(expr)){const q=expr[1];let inner=expr.slice(2,-1);inner=inner.replace(/\{([^}]+)\}/g,(_,e2)=>{const v=evalPy(e2.trim(),env,fnDefs);return v===null?'None':v===true?'True':v===false?'False':Array.isArray(v)?'['+v.join(', ')+']':String(v);});return inner;}
@@ -2577,7 +1643,7 @@ function evalPy(expr,env,fnDefs){
   if(callM){const fname=callM[1],args=callM[2]?splitArgs(callM[2]).map(a=>evalPy(a,env,fnDefs)):[];
     const BI={len:a=>Array.isArray(a[0])?a[0].length:String(a[0]??'').length,int:a=>parseInt(a[0])||0,float:a=>parseFloat(a[0])||0,str:a=>a[0]===null?'None':a[0]===true?'True':a[0]===false?'False':String(a[0]),bool:a=>!!a[0],list:a=>Array.isArray(a[0])?[...a[0]]:String(a[0]??'').split(''),tuple:a=>Array.isArray(a[0])?[...a[0]]:[a[0]],set:a=>Array.isArray(a[0])?[...new Set(a[0])]:[],dict:a=>typeof a[0]==='object'&&a[0]?{...a[0]}:{},abs:a=>Math.abs(a[0]),round:a=>a[1]!==undefined?parseFloat(Number(a[0]).toFixed(a[1])):Math.round(a[0]),max:a=>Array.isArray(a[0])?Math.max(...a[0]):Math.max(...a),min:a=>Array.isArray(a[0])?Math.min(...a[0]):Math.min(...a),sum:a=>{const arr=Array.isArray(a[0])?a[0]:a;return arr.reduce((s,x)=>s+Number(x),0);},sorted:a=>{const arr=Array.isArray(a[0])?[...a[0]]:[...a];return arr.sort((x,y)=>typeof x==='string'?x.localeCompare(y):Number(x)-Number(y));},reversed:a=>Array.isArray(a[0])?[...a[0]].reverse():[],enumerate:a=>{const arr=Array.isArray(a[0])?a[0]:String(a[0]).split('');return arr.map((v,i)=>[i,v]);},zip:a=>{const l=Math.min(...a.map(x=>Array.isArray(x)?x.length:0));return Array.from({length:l},(_,i)=>a.map(x=>x[i]));},range:a=>{let s=0,e=0,st=1;if(a.length===1)e=a[0];else if(a.length===2){s=a[0];e=a[1];}else{s=a[0];e=a[1];st=a[2];}const r=[];for(let k=s;k<e;k+=st)r.push(k);return r;},type:a=>{const t=a[0];if(t===null)return"<class 'NoneType'>";if(t===true||t===false)return"<class 'bool'>";if(typeof t==='number')return Number.isInteger(t)?"<class 'int'>":"<class 'float'>";if(typeof t==='string')return"<class 'str'>";if(Array.isArray(t))return"<class 'list'>";return"<class 'object'>";},repr:a=>JSON.stringify(a[0]),chr:a=>String.fromCharCode(a[0]),ord:a=>String(a[0]).charCodeAt(0),hex:a=>'0x'+Number(a[0]).toString(16),bin:a=>'0b'+Number(a[0]).toString(2),pow:a=>Math.pow(a[0],a[1]),sqrt:a=>Math.sqrt(a[0]),any:a=>Array.isArray(a[0])?a[0].some(Boolean):!!a[0],all:a=>Array.isArray(a[0])?a[0].every(Boolean):!!a[0],input:()=>'',print:a=>{if(term)tAppend(term,`<div class="tl t-out">${hEsc(a.map(v=>String(v)).join(' '))}</div>`);return null;}};
     if(BI[fname])return BI[fname](args);
-    if(fnDefs&&fnDefs[fname]){return 0;/* user fns resolved async via resolveCallsPy */}
+    if(fnDefs&&fnDefs[fname]){const fn=fnDefs[fname];const fe={...env};fn.params.forEach((p,pi)=>{const dm=p.match(/^(\w+)\s*=\s*(.+)$/);if(dm)fe[dm[1]]=args[pi]!==undefined?args[pi]:evalPy(dm[2],env,fnDefs);else fe[p]=args[pi];});execPy([...fn.body],fe,fnDefs,null,()=>{});return fe.__return??null;}
   }
   try{let safe=expr.replace(/\b([a-zA-Z_]\w*)\b/g,m=>{if(PY_KW.has(m)||PY_CN.has(m))return m;if(env[m]!==undefined){const v=env[m];return typeof v==='string'?JSON.stringify(v):Array.isArray(v)?JSON.stringify(v):String(v);}return'0';}).replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\b/g,'!').replace(/True/g,'true').replace(/False/g,'false').replace(/None/g,'null');return Function('"use strict";return('+safe+')')();}catch(e){return 0;}
 }
@@ -2595,27 +1661,11 @@ window.clearActividadGrade=async function(mat,ap,key,sessId){
   renderTeacherPanel();
 };
 
-
-// ── Manual grade sync utility ──
-window.syncGrades=async function(){
-  toast('Sincronizando calificaciones...');
-  await saveAll();
-  toast('✓ Calificaciones sincronizadas a /grades/');
-};
 window.setTeacherTab=function(tab){teacherTab=tab;renderTeacherPanel();};
 window.setTeacherStuIdx=function(idx){teacherStudentIdx=idx;renderTeacherPanel();};
 
 function renderTeacherPanel(){
-  if(!isTeacher)return;
-  const panel=document.getElementById('tea-panel');
-  if(!panel)return;
-  // Always force visible before rendering
-  document.getElementById('teacher-section').style.display='block';
-  document.getElementById('tea-login').style.display='none';
-  panel.style.display='block';
-  _renderTeacherPanelInner(panel);
-}
-function _renderTeacherPanelInner(panel){
+  const panel=document.getElementById('tea-panel');if(!panel)return;
   const ap=config.activePeriod;
   const tabs=[['student','Alumno','ti-user'],['forum','Foro','ti-message-circle'],['codigos','Códigos','ti-file-code'],['config','Config','ti-settings']];
   const tabsHTML=`<div class="inner-tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${teacherTab===k?'active':''}" onclick="setTeacherTab('${k}')"><i class="ti ${ic}"></i> ${l}</button>`).join('')}</div>`;
@@ -2634,30 +1684,19 @@ function _renderTeacherPanelInner(panel){
 
       if(c.freq==='actividad'){
         const cg=grades[student.mat]?.[ap]?.[c.key]||{};
-        // Only show actually graded entries, numbered 1,2,3...
-        const gradedEntries=Object.entries(cg).filter(([,v])=>v!==null&&v!==undefined&&!isNaN(parseFloat(v)));
-        const sessRows=gradedEntries.length
-          ?gradedEntries.map(([sessId,v],gi)=>{
-              const nv=parseFloat(v);
-              return`<div style="text-align:center;position:relative;">
-                <div style="font-size:12px;color:var(--text3);margin-bottom:3px;font-weight:700;">${gi+1}</div>
-                <div style="width:50px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:${nv>=9?'rgba(0,255,136,0.15)':nv>=7?'rgba(255,170,0,0.15)':'rgba(255,68,68,0.15)'};color:${nv>=9?'var(--green)':nv>=7?'var(--amber)':'var(--red)'};">${nv.toFixed(1)}</div>
-                <button onclick="window.clearActividadGrade('${student.mat}','${ap}','${c.key}','${sessId}')" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:rgba(255,68,68,0.85);border:none;color:#fff;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;font-weight:900;">×</button>
-              </div>`;
-            }).join('')
-          :`<p style="font-size:14px;color:var(--text3);font-style:italic;">Sin códigos calificados aún.</p>`;
+        const sessRows=sess.length?sess.map(s=>{const v=cg[s.id];const nv=parseFloat(v);const hasV=!isNaN(nv)&&v!==null&&v!==undefined;return`<div style="text-align:center;"><div style="font-size:17px;color:var(--text3);margin-bottom:3px;max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label)}">${esc(s.label)}</div><div style="width:50px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;background:${hasV?(nv>=9?'rgba(0,255,136,0.15)':nv>=7?'rgba(255,170,0,0.15)':'rgba(255,68,68,0.15)'):'var(--surface3)'};color:${hasV?(nv>=9?'var(--green)':nv>=7?'var(--amber)':'var(--red)'):'var(--text3)'};">${hasV?nv.toFixed(1):'—'}</div></div>`;}).join(''):'<p style="font-size:17px;color:var(--text3);">Sin sesiones</p>';
         return`<div style="background:${gbg};border:1px solid ${gbr};border-radius:10px;padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:30px;height:30px;border-radius:7px;background:${gc}22;border:1px solid ${gc}44;display:flex;align-items:center;justify-content:center;"><i class="ti ${c.icon}" style="font-size:14px;color:${gc};"></i></div>
-              <div><div style="font-size:15px;font-weight:700;">${esc(c.label)}</div><div style="font-size:13px;color:var(--text3);">Por actividad · ${c.weight}% <span style="background:rgba(0,255,136,0.15);color:var(--green);padding:1px 7px;border-radius:20px;font-size:11px;margin-left:4px;">AUTO</span></div></div>
+              <div style="width:30px;height:30px;border-radius:7px;background:${gc}22;border:1px solid ${gc}44;display:flex;align-items:center;justify-content:center;"><i class="ti ${c.icon}" style="font-size:18px;color:${gc};"></i></div>
+              <div><div style="font-size:18px;font-weight:700;">${esc(c.label)}</div><div style="font-size:17px;color:var(--text3);">Por actividad · ${c.weight}% <span style="background:rgba(0,255,136,0.15);color:var(--green);padding:1px 7px;border-radius:20px;font-size:18px;margin-left:4px;">AUTO</span></div></div>
             </div>
             <div style="font-size:28px;font-weight:900;color:${gc};">${promStr}</div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">${sessRows}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${sessRows}</div>
         </div>`;
       }
-            if(c.freq==='semana'){
+      if(c.freq==='semana'){
         if(!sess.length)return`<div style="background:var(--surface3);border-radius:10px;padding:12px 14px;color:var(--text3);font-size:18px;"><i class="ti ${c.icon}"></i> ${esc(c.label)} — Genera sesiones en Config.</div>`;
         const rows=sess.map(s=>{const sv=grades[student.mat]?.[ap]?.[c.key]?.[s.id];const val=sv!==null&&sv!==undefined?sv:'';return`<div class="gi-wrap"><label title="${esc(s.label)}">${esc(s.label)}</label><input id="gi_${c.key}_${s.id}" type="number" min="0" max="10" step="0.5" value="${val}" placeholder="—"></div>`;}).join('');
         return`<div style="background:${gbg};border:1px solid ${gbr};border-radius:10px;padding:12px 14px;">
@@ -2841,33 +1880,13 @@ function _renderTeacherPanelInner(panel){
   }
 
   panel.innerHTML=tabsHTML+content;
-
-  // Wire ALL interactive elements via JS (CSP blocks inline onclick)
-  setTimeout(()=>{
-    // Inner tabs
-    panel.querySelectorAll('.inner-tabs .tab').forEach(btn=>{
-      const tab=btn.textContent.trim().toLowerCase();
-      const tabMap={'alumno':'student','foro':'forum','códigos':'codigos','config':'config'};
-      const tabKey=tabMap[tab]||tab;
-      btn.onclick=()=>{teacherTab=tabKey;renderTeacherPanel();};
-    });
-    // Student dot navigation
-    panel.querySelectorAll('.stu-dot').forEach((dot,i)=>{
-      dot.onclick=()=>{teacherStudentIdx=i;renderTeacherPanel();};
-    });
-    // Prev/Next student buttons
-    const prevBtn=panel.querySelector('[onclick*="teacherStudentIdx-1"]')||
-                  panel.querySelectorAll('.btn.btn-sm')[0];
-    const nextBtn=panel.querySelector('[onclick*="teacherStudentIdx+1"]')||
-                  panel.querySelectorAll('.btn.btn-sm')[1];
-    if(prevBtn)prevBtn.onclick=()=>{if(teacherStudentIdx>0){teacherStudentIdx--;renderTeacherPanel();}};
-    if(nextBtn)nextBtn.onclick=()=>{if(teacherStudentIdx<ROSTER.length-1){teacherStudentIdx++;renderTeacherPanel();}};
-    // Rubric weight inputs counter
-    if(teacherTab==='config'){
-      panel.querySelectorAll('[id^="rc-weight-"]').forEach(el=>el.addEventListener('input',window.updatePctCounter));
+  // Wire up existing rubric weight inputs to counter
+  if(teacherTab==='config'){
+    setTimeout(()=>{
+      document.querySelectorAll('[id^="rc-weight-"]').forEach(el=>el.addEventListener('input',window.updatePctCounter));
       window.updatePctCounter();
-    }
-  },0);
+    },0);
+  }
 }
 
 // ── Teacher actions ──
@@ -3044,63 +2063,6 @@ window.resetRubrics=async function(){
   await saveAll();renderTeacherPanel();toast('Rúbricas restauradas');
 };
 
-
-window.migrateGrades=async function(){
-  if(!confirm('Migrar calificaciones de informatica2v2 al nodo /grades/\n\nEsto sincroniza las calificaciones actuales al portal central del maestro. ¿Continuar?'))return;
-  const btn=document.getElementById('btn-migrate');
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Migrando...';}
-  try{
-    const snap=await get(ref(db,'informatica2v2/grades'));
-    if(!snap.exists()){toast('No hay calificaciones para migrar');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-database-export"></i> Migrar calificaciones';}return;}
-    const gradesData=snap.val();
-    const promises=[];
-    let count=0;
-    for(const [mat,parciales] of Object.entries(gradesData)){
-      const syncData={};
-      for(const [pkey,criterios] of Object.entries(parciales||{})){
-        const parcialLabel=pkey==='p1'?'parcial1':pkey==='p2'?'parcial2':'final';
-        // Calculate weighted average for this parcial
-        let total=0,hasAny=false;
-        const detalle={};
-        for(const [ckey,val] of Object.entries(criterios||{})){
-          const crit=CRITERIA.find(c=>c.key===ckey);
-          if(!crit)continue;
-          let score=null;
-          if(typeof val==='object'){
-            const vals=Object.values(val).map(v=>parseFloat(v)).filter(v=>!isNaN(v)&&v>=0);
-            if(vals.length){score=vals.reduce((a,b)=>a+b,0)/vals.length;}
-          } else {
-            score=parseFloat(val);
-            if(isNaN(score))score=null;
-          }
-          if(score!==null){
-            total+=score*(crit.weight/100);
-            hasAny=true;
-            detalle[ckey]=parseFloat(score.toFixed(2));
-          }
-        }
-        syncData[parcialLabel]={
-          score:hasAny?parseFloat(Math.min(10,total).toFixed(2)):null,
-          detalle,
-          updated:Date.now(),
-          materia:'informatica2'
-        };
-      }
-      if(Object.keys(syncData).length){
-        promises.push(set(ref(db,`grades/${mat}/informatica2`),syncData));
-        count++;
-      }
-    }
-    await Promise.all(promises);
-    toast(`✓ ${count} alumnos migrados a /grades/{mat}/informatica2`);
-  }catch(e){
-    toast('Error en migración: '+e.message);
-    console.error(e);
-  }finally{
-    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-database-export"></i> Migrar calificaciones';}
-  }
-};
-
 window.clearAllData=async function(){
   if(!confirm('¿Seguro que deseas borrar TODOS los datos?\n(calificaciones, asistencias, códigos, sesiones, foro)\n\nEsta acción NO se puede deshacer.'))return;
   if(!confirm('CONFIRMACIÓN FINAL: Se borrarán todos los datos del grupo. ¿Continuar?'))return;
@@ -3114,35 +2076,27 @@ window.clearAllData=async function(){
 // STARTUP
 // ════════════════════════════════════════
 function startApp(){
-  // Set initial display state
-  document.getElementById('students-section').style.display = 'block';
-  document.getElementById('teacher-section').style.display  = 'none';
-  document.getElementById('stu-login').style.display  = 'block';
-  document.getElementById('stu-dash').style.display   = 'none';
-  document.getElementById('tea-panel').style.display  = 'none';
-  document.getElementById('tea-login').style.display  = 'block';
+  showSection('students');
+  showStudentLogin();
 
-  // Wire tab buttons
+  // Wire ALL interactive elements via JS (bypass CSP inline-script restrictions)
+  // Tab buttons
   const stuTab=document.getElementById('tab-students');
   const teaTab=document.getElementById('tab-teacher');
   if(stuTab)stuTab.onclick=(e)=>showTab('students',e);
   if(teaTab)teaTab.onclick=(e)=>showTab('teacher',e);
 
-  // Wire student login
-  const stuBtn=document.getElementById('stu-entrar-btn');
+  // Student login: Entrar button + Enter key on select
+  const stuBtn=document.getElementById('stu-entrar-btn')||document.querySelector('#stu-login .btn-primary');
   if(stuBtn)stuBtn.onclick=window.doLogin;
-  const stuMat=document.getElementById('stu-mat');
-  if(stuMat)stuMat.onkeydown=(e)=>{if(e.key==='Enter')window.doLogin();};
-  const stuPwd=document.getElementById('stu-pwd');
-  if(stuPwd)stuPwd.onkeydown=(e)=>{if(e.key==='Enter')window.doLogin();};
+  const stuSel=document.getElementById('stu-sel');
+  if(stuSel)stuSel.onkeydown=(e)=>{if(e.key==='Enter')window.doLogin();};
 
-  // Wire teacher login
-  const teaBtn=document.getElementById('tea-entrar-btn');
+  // Teacher login: Entrar button + Enter key on password
+  const teaBtn=document.getElementById('tea-entrar-btn')||document.querySelector('#tea-login .btn-primary');
   if(teaBtn)teaBtn.onclick=window.doTeacherLogin;
-  const teaUser=document.getElementById('tea-user');
-  if(teaUser)teaUser.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
-  const teaPwd=document.getElementById('tea-pwd');
-  if(teaPwd)teaPwd.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
+  const teaInput=document.getElementById('tea-pwd');
+  if(teaInput)teaInput.onkeydown=(e)=>{if(e.key==='Enter')window.doTeacherLogin();};
 }
 
 if(document.readyState==='loading'){
