@@ -213,8 +213,8 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 .terminal-wrap{border:1px solid rgba(0,180,255,0.12);border-radius:9px;overflow:hidden;margin-top:8px;}
 .terminal-header{background:#111827;padding:7px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(0,180,255,0.09);}
 .terminal-title{font-size:18px;color:var(--text3);}
-.terminal-body{background:#090e1a;padding:10px 14px;min-height:90px;max-height:180px;overflow-y:auto;font-family:'Fira Code',monospace;font-size:22px !important;line-height:1.9 !important;white-space:pre-wrap;word-break:break-word;overflow-x:hidden;}
-.tl{line-height:1.9 !important;white-space:pre-wrap;word-break:break-word;font-size:22px !important;}
+.terminal-body{background:#090e1a;padding:10px 14px;min-height:240px;max-height:480px;overflow-y:auto;font-family:'Fira Code',monospace;font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word;overflow-x:hidden;}
+.tl{line-height:1.6;white-space:pre-wrap;word-break:break-word;font-size:14px;}
 .t-out{color:#d4d4d4;font-size:22px !important;}.t-err{color:#f44747;font-size:22px !important;}.t-info{color:#569cd6;font-size:22px !important;}.t-success{color:#00ff88;font-size:22px !important;}
 .t-input-label{color:#4ec9b0;}.t-input-field{background:none;border:none;outline:none;color:#fff;font-family:'Fira Code',monospace;font-size:22px;caret-color:#00ff88;min-width:200px;}
 .tcursor{display:inline-block;width:9px;height:16px;background:#00ff88;animation:blink 1s step-end infinite;vertical-align:middle;}
@@ -1886,6 +1886,23 @@ function execPy(stmts,env,fnDefs,term,done){
   }
   next();
 }
+function splitTopPy(s,op){
+  const p=[];let d=0,cur='',inS=false,q='';
+  for(let k=0;k<s.length;k++){
+    const ch=s[k];
+    if(inS){cur+=ch;if(ch===q&&s[k-1]!=='\\')inS=false;continue;}
+    if(ch==='"'||ch==="'"){inS=true;q=ch;cur+=ch;continue;}
+    if('([{'.includes(ch))d++;
+    else if(')]}'.includes(ch))d--;
+    if(d===0&&s.startsWith(op,k)&&op!=='-'||
+       d===0&&op==='-'&&k>0&&!/[\*\/\+\-,=\(]/.test(s[k-1])&&s.startsWith(op,k)){
+      p.push(cur.trim());cur='';k+=op.length-1;continue;
+    }
+    cur+=ch;
+  }
+  p.push(cur.trim());
+  return p.filter(x=>x);
+}
 function evalPy(expr,env,fnDefs){
   if(expr===null||expr===undefined)return null;expr=String(expr).trim();if(!expr)return'';
   if(expr==='None')return null;if(expr==='True')return true;if(expr==='False')return false;
@@ -1908,6 +1925,41 @@ function evalPy(expr,env,fnDefs){
     if(BI[fname])return BI[fname](args);
     if(fnDefs&&fnDefs[fname]){const fn=fnDefs[fname];const fe={...env};fn.params.forEach((p,pi)=>{const dm=p.match(/^(\w+)\s*=\s*(.+)$/);if(dm)fe[dm[1]]=args[pi]!==undefined?args[pi]:evalPy(dm[2],env,fnDefs);else fe[p]=args[pi];});execPy([...fn.body],fe,fnDefs,null,()=>{});return fe.__return??null;}
   }
+  // String repetition: "=" * 10 or 10 * "="
+  const _mulP=splitTopPy(expr,'*');
+  if(_mulP.length===2){
+    const _lv=evalPy(_mulP[0],env,fnDefs),_rv=evalPy(_mulP[1],env,fnDefs);
+    if(typeof _lv==='string'&&typeof _rv==='number'&&Number.isInteger(_rv))return _lv.repeat(Math.max(0,_rv));
+    if(typeof _rv==='string'&&typeof _lv==='number'&&Number.isInteger(_lv))return _rv.repeat(Math.max(0,_lv));
+    if(typeof _lv==='number'&&typeof _rv==='number')return _lv*_rv;
+  }
+  // String/list concatenation: "a" + "b" or [1]+[2]
+  const _addP=splitTopPy(expr,'+');
+  if(_addP.length>1){
+    const _vals=_addP.map(p=>evalPy(p,env,fnDefs));
+    if(_vals.every(v=>typeof v==='string'))return _vals.join('');
+    if(_vals.every(v=>Array.isArray(v)))return [].concat(..._vals);
+    if(_vals.every(v=>typeof v==='number'))return _vals.reduce((a,b)=>a+b,0);
+    return _vals.map(v=>v===null?'None':v===true?'True':v===false?'False':String(v)).join('');
+  }
+  // Floor division //
+  const _fdP=splitTopPy(expr,'//');
+  if(_fdP.length===2){const _a=evalPy(_fdP[0],env,fnDefs),_b=evalPy(_fdP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return Math.floor(_a/_b);}
+  // Division
+  const _divP=splitTopPy(expr,'/');
+  if(_divP.length===2){const _a=evalPy(_divP[0],env,fnDefs),_b=evalPy(_divP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return _a/_b;}
+  // Subtraction
+  const _subP=splitTopPy(expr,'-');
+  if(_subP.length===2){const _a=evalPy(_subP[0],env,fnDefs),_b=evalPy(_subP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number')return _a-_b;}
+  // Modulo
+  const _modP=splitTopPy(expr,'%');
+  if(_modP.length===2&&!_modP[0].match(/^["']/)){const _a=evalPy(_modP[0],env,fnDefs),_b=evalPy(_modP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return _a%_b;}
+  // Power
+  const _powP=splitTopPy(expr,'**');
+  if(_powP.length===2){const _a=evalPy(_powP[0],env,fnDefs),_b=evalPy(_powP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number')return Math.pow(_a,_b);}
+  // List repetition: [0] * 5
+  const _lrP=splitTopPy(expr,'*');
+  if(_lrP.length===2){const _lv2=evalPy(_lrP[0],env,fnDefs),_rv2=evalPy(_lrP[1],env,fnDefs);if(Array.isArray(_lv2)&&typeof _rv2==='number')return Array(_rv2).fill(null).flatMap(()=>[..._lv2]);}
   try{let safe=expr.replace(/\b([a-zA-Z_]\w*)\b/g,m=>{if(PY_KW.has(m)||PY_CN.has(m))return m;if(env[m]!==undefined){const v=env[m];return typeof v==='string'?JSON.stringify(v):Array.isArray(v)?JSON.stringify(v):String(v);}return'0';}).replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\b/g,'!').replace(/True/g,'true').replace(/False/g,'false').replace(/None/g,'null');return Function('"use strict";return('+safe+')')();}catch(e){return 0;}
 }
 function evalCondPy(cond,env,fnDefs){cond=cond.trim();if(cond.startsWith('not '))return!evalCondPy(cond.slice(4).trim(),env,fnDefs);if(cond.includes(' and '))return cond.split(' and ').every(c=>evalCondPy(c.trim(),env,fnDefs));if(cond.includes(' or '))return cond.split(' or ').some(c=>evalCondPy(c.trim(),env,fnDefs));for(const[op,fn]of[['in',a=>Array.isArray(a[1])?a[1].includes(a[0]):String(a[1]).includes(String(a[0]))],['<=',a=>a[0]<=a[1]],['>=',a=>a[0]>=a[1]],['!=',a=>a[0]!=a[1]],['==',a=>a[0]==a[1]],['<',a=>Number(a[0])<Number(a[1])],['>',a=>Number(a[0])>Number(a[1])]]){const idx=cond.indexOf(op);if(idx>0){const a=evalPy(cond.slice(0,idx).trim(),env,fnDefs),b=evalPy(cond.slice(idx+op.length).trim(),env,fnDefs);return fn([a,b]);}}const v=evalPy(cond,env,fnDefs);return v!==null&&v!==false&&v!==0&&v!==''&&!(Array.isArray(v)&&v.length===0);}
