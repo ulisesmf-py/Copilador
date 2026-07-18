@@ -1203,6 +1203,141 @@ function hlCpp(code){
   return result.join('\n');
 }
 
+function hlPy(code){
+  const TQ1='\x22\x22\x22', TQ2='\x27\x27\x27';
+  const C={
+    kw:'#569cd6',bi:'#4ec9b0',fn:'#dcdcaa',st:'#ce9178',
+    nm:'#b5cea8',cm:'#6a9955',op:'#d4d4d4',vr:'#9cdcfe',
+    pt:'#ffd700',p2:'#da70d6',p3:'#87ceeb',
+    sf:'#569cd6',mg:'#dcdcaa',cs:'#4fc1ff',dc:'#c586c0',tp:'#4ec9b0'
+  };
+  function sp(c,t,e){return '<span style="color:'+c+(e?';'+e:'')+'">'+hEsc(t)+'</span>';}
+
+  function hlLine(ln, tqIn){
+    let o='',i=0,L=ln.length,tq=tqIn||null;
+
+    // Continuing triple-string from previous line
+    if(tq){
+      const ci=ln.indexOf(tq);
+      if(ci===-1) return {h:sp(C.st,ln), tq:tq};
+      o+=sp(C.st,ln.slice(0,ci+3));
+      i=ci+3; tq=null;
+    }
+
+    while(i<L){
+      const ch=ln[i];
+
+      // Inline comment
+      if(ch==='#'){ o+=sp(C.cm,ln.slice(i)); break; }
+
+      // Triple strings
+      const c3=ln.slice(i,i+3);
+      if(c3===TQ1||c3===TQ2){
+        const q=c3, rest=ln.slice(i+3), ci2=rest.indexOf(q);
+        if(ci2!==-1){ o+=sp(C.st,ln.slice(i,i+3+ci2+3)); i+=3+ci2+3; }
+        else { o+=sp(C.st,ln.slice(i)); tq=q; i=L; }
+        continue;
+      }
+
+      // f/b/r/u prefix strings
+      if(/[fFbBrRuU]/.test(ch)&&i+1<L&&(ln[i+1]==='"'||ln[i+1]==="'")){
+        const pfx=ch, q=ln[i+1], isF=pfx.toLowerCase()==='f';
+        let j=i+2;
+        while(j<L&&!(ln[j]===q&&ln[j-1]!=='\\'))j++;
+        if(j<L)j++;
+        const sc=ln.slice(i+2,j-1);
+        if(isF){
+          let fo=sp(C.st,pfx+q);
+          const rx=/{([^}]*)}/g; let fm,pv=0;
+          while((fm=rx.exec(sc))!==null){
+            if(fm.index>pv) fo+=sp(C.st,sc.slice(pv,fm.index));
+            fo+=sp(C.pt,'{')+sp(C.vr,fm[1])+sp(C.pt,'}');
+            pv=fm.index+fm[0].length;
+          }
+          if(pv<sc.length) fo+=sp(C.st,sc.slice(pv));
+          fo+=sp(C.st,j<=L?q:'');
+          o+=fo;
+        } else { o+=sp(C.st,ln.slice(i,j)); }
+        i=j; continue;
+      }
+
+      // Regular strings
+      if(ch==='"'||ch==="'"){
+        const q=ch; let j=i+1;
+        while(j<L&&!(ln[j]===q&&ln[j-1]!=='\\'))j++;
+        if(j<L)j++;
+        o+=sp(C.st,ln.slice(i,j)); i=j; continue;
+      }
+
+      // Numbers: hex 0x, binary 0b, octal 0o, float, scientific, complex j
+      if(/[0-9]/.test(ch)&&(i===0||!/\w/.test(ln[i-1]))){
+        let j=i;
+        if(ch==='0'&&i+1<L&&/[xXbBoO]/.test(ln[i+1])){j+=2;while(j<L&&/[0-9a-fA-F_]/.test(ln[j]))j++;}
+        else{while(j<L&&/[0-9_]/.test(ln[j]))j++;if(j<L&&ln[j]==='.'){j++;while(j<L&&/[0-9_]/.test(ln[j]))j++;}if(j<L&&/[eE]/.test(ln[j])){j++;if(j<L&&/[+\-]/.test(ln[j]))j++;while(j<L&&/[0-9]/.test(ln[j]))j++;}if(j<L&&/[jJ]/.test(ln[j]))j++;}
+        o+=sp(C.nm,ln.slice(i,j)); i=j; continue;
+      }
+
+      // Identifiers
+      if(/[a-zA-Z_]/.test(ch)){
+        let j=i; while(j<L&&/\w/.test(ln[j]))j++;
+        const w=ln.slice(i,j);
+        let k=j; while(k<L&&ln[k]===' ')k++;
+        const isCall=ln[k]==='(';
+        const inDef=/\bdef\b/.test(ln.slice(0,i));
+        const nxtColon=ln.slice(j).trimStart().startsWith(':');
+        const isControl=/^(if|elif|else|for|while|with|try|except|finally)$/.test(w);
+
+        if(w==='self'||w==='cls')             o+=sp(C.sf,w,'font-style:italic');
+        else if(PY_KW.has(w))                 o+=sp(C.kw,w,'font-weight:600');
+        else if(PY_CN.has(w))                 o+=sp(C.nm,w);
+        else if(PY_BI.has(w))                 o+=sp(C.bi,w);
+        else if(/^__\w+__$/.test(w))          o+=sp(C.mg,w);
+        else if(/^[A-Z][A-Z0-9_]{2,}$/.test(w)) o+=sp(C.cs,w,'font-weight:700');
+        else if(/^[A-Z]/.test(w))             o+=sp(C.tp,w);
+        else if(isCall)                        o+=sp(C.fn,w);
+        else if(nxtColon&&inDef&&!isControl)  o+=sp(C.vr,w);
+        else                                   o+=sp(C.vr,w);
+        i=j; continue;
+      }
+
+      // Decorator @
+      if(ch==='@'){ let j=i+1; while(j<L&&/[\w.]/.test(ln[j]))j++; o+=sp(C.dc,ln.slice(i,j)); i=j; continue; }
+
+      // 2-char operators
+      if(i+1<L){
+        const t2=ln.slice(i,i+2);
+        if(['**','<=','>=','!=','==','+=','-=','*=','/=','%=','->',':=','<<','>>','//','**'].includes(t2)){
+          o+=sp(C.op,t2); i+=2; continue;
+        }
+      }
+      // 1-char operators
+      if(/[+\-*\/=<>!&|^~%@:,;.]/.test(ch)){ o+=sp(C.op,ch); i++; continue; }
+
+      // Brackets with rainbow depth
+      if(/[(){}\[\]]/.test(ch)){
+        const d=ln.slice(0,i).split('').reduce((x,c)=>'([{'.includes(c)?x+1:')]}'.includes(c)?x-1:x,0);
+        const bc=[C.pt,C.p2,C.p3];
+        o+='<span style="color:'+bc[Math.max(0,d)%3]+';">'+hEsc(ch)+'</span>';
+        i++; continue;
+      }
+
+      o+=hEsc(ch); i++;
+    }
+    return {h:o, tq:tq};
+  }
+
+  // Process all lines with stateful triple-string tracking
+  const lines=code.split('\n');
+  const result=[];
+  let tqState=null;
+  for(const line of lines){
+    const {h,tq}=hlLine(line,tqState);
+    tqState=tq;
+    result.push(h);
+  }
+  return result.join('\n');
+}
+
 function splitArgs(s){if(!s?.trim())return[];const a=[];let d=0,c='',inS=false,sq='';for(let i=0;i<s.length;i++){const ch=s[i];if(!inS&&(ch==='"'||ch==="'")){inS=true;sq=ch;c+=ch;continue;}if(inS&&ch===sq&&s[i-1]!=='\\'){inS=false;c+=ch;continue;}if(inS){c+=ch;continue;}if(ch==='('||ch==='['||ch==='{')d++;if(ch===')'||ch===']'||ch==='}')d--;if(ch===','&&d===0){a.push(c.trim());c='';}else c+=ch;}if(c.trim())a.push(c.trim());return a;}
 
 const _cbs={};
