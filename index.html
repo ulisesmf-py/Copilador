@@ -1072,11 +1072,136 @@ const PY_KW=new Set(['def','class','if','elif','else','for','while','in','not','
 const PY_BI=new Set(['print','input','len','range','type','int','str','float','bool','list','dict','set','tuple','enumerate','zip','map','filter','sorted','reversed','min','max','sum','abs','round','open','chr','ord','hex','bin','pow','any','all','repr']);
 const PY_CN=new Set(['True','False','None','self','cls']);
 
-function hlCpp(code){let inB=false;return code.split('\n').map(line=>{if(inB){const e=line.indexOf('*/');if(e===-1)return`<span class="cm">${hEsc(line)}</span>`;inB=false;return`<span class="cm">${hEsc(line.slice(0,e+2))}</span>`+tkCpp(line.slice(e+2));}if(/^\s*\/\//.test(line))return`<span class="cm">${hEsc(line)}</span>`;const bs=line.indexOf('/*');if(bs!==-1){const be=line.indexOf('*/',bs+2);if(be===-1){inB=true;return tkCpp(line.slice(0,bs))+`<span class="cm">${hEsc(line.slice(bs))}</span>`;}return tkCpp(line.slice(0,bs))+`<span class="cm">${hEsc(line.slice(bs,be+2))}</span>`+tkCpp(line.slice(be+2));}return tkCpp(line);}).join('\n');}
+function hlCpp(code){
+  const TQ1='\x22\x22\x22',TQ2='\x27\x27\x27';
+  const C={kw:'#569cd6',pp:'#c586c0',ty:'#4ec9b0',fn:'#dcdcaa',
+    st:'#ce9178',nm:'#b5cea8',cm:'#6a9955',op:'#d4d4d4',
+    vr:'#9cdcfe',pt:'#ffd700',p2:'#da70d6',p3:'#87ceeb',cs:'#4fc1ff'};
+  const KW=new Set(['int','float','double','long','short','unsigned','signed','char','bool','void',
+    'string','auto','const','static','extern','register','volatile','inline','virtual','explicit',
+    'mutable','constexpr','nullptr','true','false','if','else','for','while','do','switch','case',
+    'default','break','continue','return','new','delete','class','struct','union','enum',
+    'public','private','protected','namespace','using','template','typename','typedef',
+    'operator','sizeof','alignof','decltype','this','throw','try','catch','noexcept',
+    'override','final','and','or','not','bitand','bitor','xor']);
+  const BI=new Set(['cout','cin','cerr','clog','endl','flush','ws','string','wstring','vector',
+    'map','unordered_map','set','unordered_set','pair','tuple','array','deque','list','queue',
+    'stack','priority_queue','bitset','optional','variant','any','span','string_view',
+    'stringstream','istringstream','ostringstream','fstream','ifstream','ofstream',
+    'istream','ostream','iostream','printf','scanf','sprintf','sscanf','fprintf','fscanf',
+    'malloc','calloc','realloc','free','memcpy','memmove','memset','strlen','strcmp',
+    'strcpy','strncpy','strcat','strtol','strtod','atoi','atof','atol',
+    'sqrt','pow','abs','fabs','floor','ceil','round','trunc','fmod','sin','cos','tan',
+    'asin','acos','atan','atan2','log','log2','log10','exp','exp2',
+    'rand','srand','time','clock','exit','abort','system',
+    'INT_MAX','INT_MIN','UINT_MAX','LONG_MAX','DBL_MAX','FLT_MAX','SIZE_MAX',
+    'NULL','EOF','SEEK_SET','SEEK_CUR','SEEK_END','EXIT_SUCCESS','EXIT_FAILURE',
+    'M_PI','M_E','INFINITY','NAN','numeric_limits','make_pair','make_tuple',
+    'move','forward','swap','sort','find','count','fill','copy','transform',
+    'begin','end','rbegin','rend','size','empty','push_back','pop_back',
+    'push_front','pop_front','insert','erase','clear','reserve','resize']);
 
-function tkCpp(line){let o='',i=0,L=line.length;while(i<L){if(i<L-1&&line[i]==='/'&&line[i+1]==='/'){o+=`<span class="cm">${hEsc(line.slice(i))}</span>`;break;}if(i===0&&line[0]==='#'){const m=line.match(/^(\s*#\s*\w+)(.*)/);if(m){o+=`<span class="pp">${hEsc(m[1])}</span>`;const r=m[2];const a=r.match(/^(\s*)(<[^>]+>)(.*)/);if(a)o+=hEsc(a[1])+`<span class="st">${hEsc(a[2])}</span>`+tkCpp(a[3]);else{const b=r.match(/^(\s*)("[^"]*")(.*)/);if(b)o+=hEsc(b[1])+`<span class="st">${hEsc(b[2])}</span>`+tkCpp(b[3]);else o+=tkCpp(r);}break;}}if(line[i]==='"'){let j=i+1;while(j<L&&!(line[j]==='"'&&line[j-1]!=='\\'))j++;j++;o+=`<span class="st">${hEsc(line.slice(i,j))}</span>`;i=j;continue;}if(line[i]==="'"){let j=i+1;while(j<L&&!(line[j]==="'"&&line[j-1]!=='\\'))j++;j++;o+=`<span class="st">${hEsc(line.slice(i,j))}</span>`;i=j;continue;}if(/[0-9]/.test(line[i])&&(i===0||!/\w/.test(line[i-1]))){let j=i;while(j<L&&/[0-9.xXa-fA-FuUlLeE+\-]/.test(line[j]))j++;o+=`<span class="nm">${hEsc(line.slice(i,j))}</span>`;i=j;continue;}if(/[a-zA-Z_]/.test(line[i])){let j=i;while(j<L&&/\w/.test(line[j]))j++;const w=line.slice(i,j);let k=j;while(k<L&&line[k]===' ')k++;const isC=line[k]==='(';if(CPP_KW.has(w))o+=`<span class="kw">${hEsc(w)}</span>`;else if(CPP_TY.has(w))o+=`<span class="ty">${hEsc(w)}</span>`;else if(isC)o+=`<span class="fn">${hEsc(w)}</span>`;else if(/^[A-Z]/.test(w))o+=`<span class="ty">${hEsc(w)}</span>`;else o+=`<span class="vr">${hEsc(w)}</span>`;i=j;continue;}if(i<L-1){const t2=line.slice(i,i+2);if(['<<','>>','<=','>=','!=','==','&&','||','++','--','->','::','+=','-=','*=','/=','%='].includes(t2)){o+=`<span class="op">${hEsc(t2)}</span>`;i+=2;continue;}}if(/[+\-*\/=<>!&|^~%?:,;.]/.test(line[i])){o+=`<span class="op">${hEsc(line[i])}</span>`;i++;continue;}if(/[(){}\[\]]/.test(line[i])){o+=`<span class="pt">${hEsc(line[i])}</span>`;i++;continue;}o+=hEsc(line[i]);i++;}return o;}
+  function sp(c,t,e){return '<span style="color:'+c+(e?';'+e:'')+'">'+hEsc(t)+'</span>';}
 
-function hlPy(code){return code.split('\n').map(line=>{if(/^\s*#/.test(line))return`<span class="cm">${hEsc(line)}</span>`;let o='',i=0,L=line.length;while(i<L){if(line[i]==='#'){o+=`<span class="cm">${hEsc(line.slice(i))}</span>`;break;}if(/^[frFR]/.test(line[i])&&i+1<L&&(line[i+1]==='"'||line[i+1]==="'")){const q=line[i+1];let j=i+2;while(j<L&&line[j]!==q)j++;j++;o+=`<span class="st">${hEsc(line.slice(i,j))}</span>`;i=j;continue;}if(line[i]==='"'||line[i]==="'"){const q=line[i];let j=i+1;while(j<L&&!(line[j]===q&&line[j-1]!=='\\'))j++;j++;o+=`<span class="st">${hEsc(line.slice(i,j))}</span>`;i=j;continue;}if(/[0-9]/.test(line[i])&&(i===0||!/\w/.test(line[i-1]))){let j=i;while(j<L&&/[0-9.eExX_jJ]/.test(line[j]))j++;o+=`<span class="nm">${hEsc(line.slice(i,j))}</span>`;i=j;continue;}if(/[a-zA-Z_]/.test(line[i])){let j=i;while(j<L&&/\w/.test(line[j]))j++;const w=line.slice(i,j);let k=j;while(k<L&&line[k]===' ')k++;const isC=line[k]==='(';if(PY_KW.has(w))o+=`<span class="kw">${hEsc(w)}</span>`;else if(PY_CN.has(w))o+=`<span class="nm">${hEsc(w)}</span>`;else if(PY_BI.has(w))o+=`<span class="ty">${hEsc(w)}</span>`;else if(isC)o+=`<span class="fn">${hEsc(w)}</span>`;else if(/^[A-Z]/.test(w))o+=`<span class="ty">${hEsc(w)}</span>`;else o+=`<span class="vr">${hEsc(w)}</span>`;i=j;continue;}if(i<L-1){const t2=line.slice(i,i+2);if(['**','//','<=','>=','!=','==','+=','-=','*=','/=','%=','->',':='].includes(t2)){o+=`<span class="op">${hEsc(t2)}</span>`;i+=2;continue;}}if(/[+\-*\/=<>!&|^~%?:,;.]/.test(line[i])){o+=`<span class="op">${hEsc(line[i])}</span>`;i++;continue;}if(/[(){}\[\]]/.test(line[i])){o+=`<span class="pt">${hEsc(line[i])}</span>`;i++;continue;}o+=hEsc(line[i]);i++;}return o;}).join('\n');}
+  const lines=code.split('\n');
+  const result=[];
+  let inBlock=false;
+
+  for(const line of lines){
+    let o='',i=0,L=line.length;
+
+    if(inBlock){
+      const ei=line.indexOf('*/');
+      if(ei===-1){result.push(sp(C.cm,line));continue;}
+      o+=sp(C.cm,line.slice(0,ei+2));
+      i=ei+2;inBlock=false;
+    }
+
+    while(i<L){
+      const ch=line[i];
+
+      // Block comment
+      if(ch==='/'&&line[i+1]==='*'){
+        const ei=line.indexOf('*/',i+2);
+        if(ei===-1){o+=sp(C.cm,line.slice(i));inBlock=true;i=L;continue;}
+        o+=sp(C.cm,line.slice(i,ei+2));i=ei+2;continue;
+      }
+      // Line comment
+      if(ch==='/'&&line[i+1]==='/'){o+=sp(C.cm,line.slice(i));i=L;break;}
+
+      // Preprocessor
+      const stripped=line.slice(0,i).trim();
+      if(ch==='#'&&stripped===''){
+        o+=sp(C.pp,line.slice(i));i=L;continue;
+      }
+
+      // Strings
+      if(ch==='"'||ch==="'"){
+        const q=ch;let j=i+1;
+        while(j<L){if(line[j]==='\\'){j+=2;continue;}if(line[j]===q)break;j++;}
+        if(j<L)j++;
+        const raw=line.slice(i,j);
+        const esc=raw.replace(/\\[ntr0'"\\]/g,m=>'<span style="color:#d7ba7d;">'+hEsc(m)+'</span>');
+        o+='<span style="color:'+C.st+';">'+esc+'</span>';
+        i=j;continue;
+      }
+
+      // Numbers: 0x hex, 0b bin, float, scientific, suffix
+      if(/[0-9]/.test(ch)&&(i===0||!/\w/.test(line[i-1]))){
+        let j=i;
+        if(ch==='0'&&i+1<L&&/[xXbB]/.test(line[i+1])){j+=2;while(j<L&&/[0-9a-fA-F_]/.test(line[j]))j++;}
+        else{
+          while(j<L&&/[0-9_]/.test(line[j]))j++;
+          if(j<L&&line[j]==='.')j++;
+          while(j<L&&/[0-9_]/.test(line[j]))j++;
+          if(j<L&&/[eE]/.test(line[j])){j++;if(j<L&&/[+\-]/.test(line[j]))j++;while(j<L&&/[0-9]/.test(line[j]))j++;}
+        }
+        while(j<L&&/[uUlLfF]/.test(line[j]))j++;
+        o+=sp(C.nm,line.slice(i,j));i=j;continue;
+      }
+
+      // Identifiers
+      if(/[a-zA-Z_]/.test(ch)){
+        let j=i;while(j<L&&/\w/.test(line[j]))j++;
+        const w=line.slice(i,j);
+        let k=j;while(k<L&&line[k]===' ')k++;
+        const isCall=line[k]==='(';
+        const nextTp=line.slice(j).trimStart().startsWith('::');
+        if(KW.has(w))             o+=sp(C.kw,w,'font-weight:600');
+        else if(BI.has(w))        o+=sp(C.ty,w);
+        else if(/^[A-Z][A-Z0-9_]{2,}$/.test(w)) o+=sp(C.cs,w,'font-weight:700');
+        else if(/^[A-Z]/.test(w)) o+=sp(C.ty,w);
+        else if(isCall)           o+=sp(C.fn,w);
+        else                      o+=sp(C.vr,w);
+        i=j;continue;
+      }
+
+      // 3-char ops
+      if(i+2<L){
+        const t3=line.slice(i,i+3);
+        if(['<<=','>>=','...','->*'].includes(t3)){o+=sp(C.op,t3);i+=3;continue;}
+      }
+      // 2-char ops
+      if(i+1<L){
+        const t2=line.slice(i,i+2);
+        if(['::','->','++','--','<=','>=','==','!=','&&','||','+=','-=','*=','/=',
+            '%=','&=','|=','^=','<<','>>'].includes(t2)){o+=sp(C.op,t2);i+=2;continue;}
+      }
+      if(/[+\-*\/=<>!&|^~%:,;.?]/.test(ch)){o+=sp(C.op,ch);i++;continue;}
+
+      // Brackets rainbow
+      if(/[(){}\[\]]/.test(ch)){
+        const d=line.slice(0,i).split('').reduce((x,c)=>'([{'.includes(c)?x+1:')]}'.includes(c)?x-1:x,0);
+        const bc=[C.pt,C.p2,C.p3];
+        o+='<span style="color:'+bc[Math.max(0,d)%3]+';">'+hEsc(ch)+'</span>';
+        i++;continue;
+      }
+      o+=hEsc(ch);i++;
+    }
+    result.push(o);
+  }
+  return result.join('\n');
+}
 
 function splitArgs(s){if(!s?.trim())return[];const a=[];let d=0,c='',inS=false,sq='';for(let i=0;i<s.length;i++){const ch=s[i];if(!inS&&(ch==='"'||ch==="'")){inS=true;sq=ch;c+=ch;continue;}if(inS&&ch===sq&&s[i-1]!=='\\'){inS=false;c+=ch;continue;}if(inS){c+=ch;continue;}if(ch==='('||ch==='['||ch==='{')d++;if(ch===')'||ch===']'||ch==='}')d--;if(ch===','&&d===0){a.push(c.trim());c='';}else c+=ch;}if(c.trim())a.push(c.trim());return a;}
 
@@ -1302,8 +1427,11 @@ function buildEditor(mountId,lang,filename,version){
     if(e.key==='Enter'&&!e.ctrlKey&&!e.metaKey){
       e.preventDefault();
       const trimmed=curLine.trimEnd();
-      const extraIndent=(isCpp?trimmed.endsWith('{'):trimmed.endsWith(':'))?'  ':'';
-      const ins='\n'+indent+extraIndent;
+      const dblTQ=(val.substring(0,s).split('\x22\x22\x22').length-1);
+      const sglTQ=(val.substring(0,s).split('\x27\x27\x27').length-1);
+      const inTQ=!isCpp&&(dblTQ%2!==0||sglTQ%2!==0);
+      const extraIndent=(!inTQ&&(isCpp?trimmed.endsWith('{'):trimmed.endsWith(':')))?'  ':'';
+      const ins='\n'+(inTQ?'':indent+extraIndent);
       ta.value=bef+ins+aft;
       ta.selectionStart=ta.selectionEnd=s+ins.length;
       doHL();autoSave();return;
