@@ -44,7 +44,7 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 .tab:hover:not(.active){color:var(--text);border-color:rgba(0,180,255,0.22);}
 
 /* ── Sections ── */
-.sections{padding:0 20px 28px;max-width:880px;margin:0 auto;}
+.sections{padding:0 20px 28px;max-width:880px;margin:0 auto;min-height:60vh;}
 .section{display:none;}
 .section.active{display:block !important;visibility:visible !important;opacity:1 !important;}
 
@@ -201,10 +201,10 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 .editor-filename{font-size:18px;color:var(--text2);flex:1;}
 .editor-ver{font-size:17px;color:var(--text3);}
 .code-editor-body{display:flex;flex-direction:row;height:380px;max-height:380px;overflow:hidden;background:#1e1e1e;}
-.line-numbers{padding:14px 6px 14px 10px;font-size:15px;line-height:1.65;color:#555;text-align:right;user-select:none;width:42px;min-width:42px;max-width:42px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;background:#1e1e1e;white-space:pre;flex-shrink:0;display:block;align-self:stretch;}
+.line-numbers{padding:14px 6px 14px 10px;font-size:15px;line-height:24px;color:#555;text-align:right;user-select:none;width:42px;min-width:42px;max-width:42px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;background:#1e1e1e;white-space:pre;flex-shrink:0;display:block;align-self:stretch;}
 .code-area{flex:1;position:relative;overflow:hidden;min-width:0;height:100%;}
-.code-highlight{position:absolute;top:0;left:0;right:0;bottom:0;padding:14px;font-size:15px;line-height:1.65;pointer-events:none;white-space:pre;overflow:auto;font-family:'Fira Code',monospace;}
-.code-textarea{position:absolute;top:0;left:0;right:0;bottom:0;padding:14px;font-size:15px;line-height:1.65;background:transparent;border:none;outline:none;resize:none;color:transparent;caret-color:#fff;white-space:pre;overflow:auto;font-family:'Fira Code',monospace;z-index:1;}
+.code-highlight{position:absolute;top:0;left:0;right:0;bottom:0;padding:14px 14px 14px 14px;font-size:15px;line-height:24px;pointer-events:none;white-space:pre;overflow:hidden;font-family:'Fira Code',monospace,monospace;tab-size:2;-moz-tab-size:2;}
+.code-textarea{position:absolute;top:0;left:0;right:0;bottom:0;padding:14px 14px 14px 14px;font-size:15px;line-height:24px;background:transparent;border:none;outline:none;resize:none;color:transparent;caret-color:#fff;white-space:pre;overflow:auto;font-family:'Fira Code',monospace,monospace;z-index:1;tab-size:2;-moz-tab-size:2;}
 .run-btn{background:rgba(0,180,255,0.14);border:1px solid rgba(0,180,255,0.38);color:var(--accent);padding:9px 18px;border-radius:8px 0 0 8px;cursor:pointer;font-size:18px;font-family:var(--font);font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
 .run-btn:hover{background:rgba(0,180,255,0.26);}
 .clear-btn{background:var(--surface2);border:1px solid rgba(0,180,255,0.1);border-left:none;color:var(--text2);padding:9px 14px;cursor:pointer;font-size:17px;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;transition:all .15s;border-radius:0;}
@@ -361,7 +361,7 @@ input[type="date"]{color-scheme:dark;}
     </div>
     <div id="stu-dash" style="display:none;"></div>
   </div>
-  <div class="section" id="teacher-section">
+  <div class="section" id="teacher-section" style="display:none;">
     <div id="tea-login">
       <div class="login-wrap">
         <div class="login-box">
@@ -559,18 +559,18 @@ function getLevel(avg){
 // NAVIGATION — The only reliable way
 // ════════════════════════════════════════
 function showSection(name){
-  // Set nav lock so Firebase listener doesn't interrupt
   window._navLock=true;
   clearTimeout(window._navLockTimer);
   window._navLockTimer=setTimeout(()=>{window._navLock=false;},2000);
-  
-  // Toggle sections
-  document.getElementById('students-section').style.display=name==='students'?'block':'none';
-  document.getElementById('teacher-section').style.display=name==='teacher'?'block':'none';
-  
-  // Toggle tab buttons
-  document.getElementById('tab-students').classList.toggle('active',name==='students');
-  document.getElementById('tab-teacher').classList.toggle('active',name==='teacher');
+  // Hard isolation: only ONE section visible
+  const stu=document.getElementById('students-section');
+  const tea=document.getElementById('teacher-section');
+  if(stu){stu.style.setProperty('display',name==='students'?'block':'none','important');}
+  if(tea){tea.style.setProperty('display',name==='teacher'?'block':'none','important');}
+  const st=document.getElementById('tab-students');
+  const tt=document.getElementById('tab-teacher');
+  if(st)st.classList.toggle('active',name==='students');
+  if(tt)tt.classList.toggle('active',name==='teacher');
 }
 
 window.showTab=function(name,e){
@@ -1493,9 +1493,14 @@ function buildEditor(mountId,lang,filename,version){
     hl.innerHTML=HL(code);
     const lineCount=code.split('\n').length;
     lnEl.textContent=Array.from({length:lineCount},(_,i)=>i+1).join('\n');
+    // Keep scroll in sync after re-render
+    hl.scrollTop=ta.scrollTop;
+    hl.scrollLeft=ta.scrollLeft;
+    lnEl.scrollTop=ta.scrollTop;
   }
 
   function syncScroll(){
+    // Sync highlight layer to textarea scroll position
     hl.scrollTop=ta.scrollTop;
     hl.scrollLeft=ta.scrollLeft;
     lnEl.scrollTop=ta.scrollTop;
@@ -1518,7 +1523,9 @@ function buildEditor(mountId,lang,filename,version){
         localStorage.setItem(lsKey('nm'),pnEl?.value||'');
       }catch(e){}
       if(asEl){asEl.textContent='● guardado';asEl.style.color='#00ff88';}
-    },1500);
+      // Reset to normal state after showing saved
+      setTimeout(()=>{if(asEl&&asEl.textContent==='● guardado'){asEl.textContent='● guardado';asEl.style.color='var(--text3)';}},2000);
+    },800);
   }
 
   ta.value=savedCode;
@@ -1887,22 +1894,30 @@ function execPy(stmts,env,fnDefs,term,done){
   next();
 }
 function splitTopPy(s,op){
+  const DQUOTE=String.fromCharCode(34),SQUOTE=String.fromCharCode(39);
   const p=[];let d=0,cur='',inS=false,q='';
   for(let k=0;k<s.length;k++){
     const ch=s[k];
-    if(inS){cur+=ch;if(ch===q&&s[k-1]!=='\\')inS=false;continue;}
-    if(ch==='"'||ch==="'"){inS=true;q=ch;cur+=ch;continue;}
-    if('([{'.includes(ch))d++;
-    else if(')]}'.includes(ch))d--;
-    if(d===0&&s.startsWith(op,k)&&op!=='-'||
-       d===0&&op==='-'&&k>0&&!/[\*\/\+\-,=\(]/.test(s[k-1])&&s.startsWith(op,k)){
+    if(inS){cur+=ch;if(ch===q&&s[k-1]!==String.fromCharCode(92))inS=false;continue;}
+    if(ch===DQUOTE||ch===SQUOTE){inS=true;q=ch;cur+=ch;continue;}
+    if(ch==='('||ch==='['||ch==='{')d++;
+    else if(ch===')'||ch===']'||ch==='}')d--;
+    if(d===0&&s.startsWith(op,k)){
+      if(op==='*'&&(s[k+1]==='*'||s[k-1]==='*')){cur+=ch;continue;}
+      if(op==='/'&&(s[k+1]==='/'||s[k-1]==='/')){cur+=ch;continue;}
+      if(op==='-'){
+        if(k===0){cur+=ch;continue;} // leading unary minus
+        const prev=s[k-1];
+        if(prev==='*'||prev==='+'||prev==='-'||prev==='/'||prev==='('||prev===','||prev==='='||prev==='['||prev==='{'){cur+=ch;continue;}
+      }
       p.push(cur.trim());cur='';k+=op.length-1;continue;
     }
     cur+=ch;
   }
   p.push(cur.trim());
-  return p.filter(x=>x);
+  return p.filter(x=>x.length>0);
 }
+
 function evalPy(expr,env,fnDefs){
   if(expr===null||expr===undefined)return null;expr=String(expr).trim();if(!expr)return'';
   if(expr==='None')return null;if(expr==='True')return true;if(expr==='False')return false;
@@ -1925,41 +1940,41 @@ function evalPy(expr,env,fnDefs){
     if(BI[fname])return BI[fname](args);
     if(fnDefs&&fnDefs[fname]){const fn=fnDefs[fname];const fe={...env};fn.params.forEach((p,pi)=>{const dm=p.match(/^(\w+)\s*=\s*(.+)$/);if(dm)fe[dm[1]]=args[pi]!==undefined?args[pi]:evalPy(dm[2],env,fnDefs);else fe[p]=args[pi];});execPy([...fn.body],fe,fnDefs,null,()=>{});return fe.__return??null;}
   }
-  // String repetition: "=" * 10 or 10 * "="
+  // Power ** (must check before *)
+  const _powP=splitTopPy(expr,'**');
+  if(_powP.length===2){const _a2=evalPy(_powP[0],env,fnDefs),_b2=evalPy(_powP[1],env,fnDefs);if(typeof _a2==='number'&&typeof _b2==='number')return Math.pow(_a2,_b2);}
+  // String/List repetition: "x"*3 or 3*"x" or [1]*3 (must check after **)
   const _mulP=splitTopPy(expr,'*');
   if(_mulP.length===2){
     const _lv=evalPy(_mulP[0],env,fnDefs),_rv=evalPy(_mulP[1],env,fnDefs);
-    if(typeof _lv==='string'&&typeof _rv==='number'&&Number.isInteger(_rv))return _lv.repeat(Math.max(0,_rv));
-    if(typeof _rv==='string'&&typeof _lv==='number'&&Number.isInteger(_lv))return _rv.repeat(Math.max(0,_lv));
+    if(typeof _lv==='string'&&typeof _rv==='number')return _lv.repeat(Math.max(0,Math.round(_rv)));
+    if(typeof _rv==='string'&&typeof _lv==='number')return _rv.repeat(Math.max(0,Math.round(_lv)));
+    if(Array.isArray(_lv)&&typeof _rv==='number')return Array.from({length:Math.max(0,Math.round(_rv))},()=>[..._lv]).flat();
     if(typeof _lv==='number'&&typeof _rv==='number')return _lv*_rv;
   }
-  // String/list concatenation: "a" + "b" or [1]+[2]
+  // Floor division //  (must check before /)
+  const _fdP=splitTopPy(expr,'//');
+  if(_fdP.length===2){const _a=evalPy(_fdP[0],env,fnDefs),_b=evalPy(_fdP[1],env,fnDefs);if(typeof _b==='number'&&_b!==0)return typeof _a==='number'?Math.floor(_a/_b):0;}
+  // Division /
+  const _divP=splitTopPy(expr,'/');
+  if(_divP.length===2){const _a=evalPy(_divP[0],env,fnDefs),_b=evalPy(_divP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return _a/_b;}
+  // Concatenation / addition +
   const _addP=splitTopPy(expr,'+');
   if(_addP.length>1){
     const _vals=_addP.map(p=>evalPy(p,env,fnDefs));
     if(_vals.every(v=>typeof v==='string'))return _vals.join('');
     if(_vals.every(v=>Array.isArray(v)))return [].concat(..._vals);
     if(_vals.every(v=>typeof v==='number'))return _vals.reduce((a,b)=>a+b,0);
-    return _vals.map(v=>v===null?'None':v===true?'True':v===false?'False':String(v)).join('');
+    // Mixed: convert all to string
+    return _vals.map(v=>v===null?'None':v===true?'True':v===false?'False':Array.isArray(v)?'['+v.map(x=>typeof x==='string'?JSON.stringify(x):String(x)).join(', ')+']':String(v)).join('');
   }
-  // Floor division //
-  const _fdP=splitTopPy(expr,'//');
-  if(_fdP.length===2){const _a=evalPy(_fdP[0],env,fnDefs),_b=evalPy(_fdP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return Math.floor(_a/_b);}
-  // Division
-  const _divP=splitTopPy(expr,'/');
-  if(_divP.length===2){const _a=evalPy(_divP[0],env,fnDefs),_b=evalPy(_divP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return _a/_b;}
-  // Subtraction
+  // Subtraction -
   const _subP=splitTopPy(expr,'-');
   if(_subP.length===2){const _a=evalPy(_subP[0],env,fnDefs),_b=evalPy(_subP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number')return _a-_b;}
-  // Modulo
+  // Modulo %
   const _modP=splitTopPy(expr,'%');
-  if(_modP.length===2&&!_modP[0].match(/^["']/)){const _a=evalPy(_modP[0],env,fnDefs),_b=evalPy(_modP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return _a%_b;}
-  // Power
-  const _powP=splitTopPy(expr,'**');
-  if(_powP.length===2){const _a=evalPy(_powP[0],env,fnDefs),_b=evalPy(_powP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number')return Math.pow(_a,_b);}
-  // List repetition: [0] * 5
-  const _lrP=splitTopPy(expr,'*');
-  if(_lrP.length===2){const _lv2=evalPy(_lrP[0],env,fnDefs),_rv2=evalPy(_lrP[1],env,fnDefs);if(Array.isArray(_lv2)&&typeof _rv2==='number')return Array(_rv2).fill(null).flatMap(()=>[..._lv2]);}
+  if(_modP.length===2){const _a=evalPy(_modP[0],env,fnDefs),_b=evalPy(_modP[1],env,fnDefs);if(typeof _a==='number'&&typeof _b==='number'&&_b!==0)return _a%_b;}
+
   try{let safe=expr.replace(/\b([a-zA-Z_]\w*)\b/g,m=>{if(PY_KW.has(m)||PY_CN.has(m))return m;if(env[m]!==undefined){const v=env[m];return typeof v==='string'?JSON.stringify(v):Array.isArray(v)?JSON.stringify(v):String(v);}return'0';}).replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\b/g,'!').replace(/True/g,'true').replace(/False/g,'false').replace(/None/g,'null');return Function('"use strict";return('+safe+')')();}catch(e){return 0;}
 }
 function evalCondPy(cond,env,fnDefs){cond=cond.trim();if(cond.startsWith('not '))return!evalCondPy(cond.slice(4).trim(),env,fnDefs);if(cond.includes(' and '))return cond.split(' and ').every(c=>evalCondPy(c.trim(),env,fnDefs));if(cond.includes(' or '))return cond.split(' or ').some(c=>evalCondPy(c.trim(),env,fnDefs));for(const[op,fn]of[['in',a=>Array.isArray(a[1])?a[1].includes(a[0]):String(a[1]).includes(String(a[0]))],['<=',a=>a[0]<=a[1]],['>=',a=>a[0]>=a[1]],['!=',a=>a[0]!=a[1]],['==',a=>a[0]==a[1]],['<',a=>Number(a[0])<Number(a[1])],['>',a=>Number(a[0])>Number(a[1])]]){const idx=cond.indexOf(op);if(idx>0){const a=evalPy(cond.slice(0,idx).trim(),env,fnDefs),b=evalPy(cond.slice(idx+op.length).trim(),env,fnDefs);return fn([a,b]);}}const v=evalPy(cond,env,fnDefs);return v!==null&&v!==false&&v!==0&&v!==''&&!(Array.isArray(v)&&v.length===0);}
