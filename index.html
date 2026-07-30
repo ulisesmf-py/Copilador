@@ -1872,8 +1872,41 @@ function execPy(stmts,env,fnDefs,term,done){
       }
       return next();
     }
-    const inpM=line.match(/^(\w+)\s*=\s*(int|float|str)?\s*\(?\s*input\s*\(([^)]*)\)\s*\)?$/);
-    if(inpM){let prompt=inpM[3]?.trim()||'';if(/^["'].*["']$/.test(prompt))prompt=prompt.slice(1,-1);tInput(term,prompt,val=>{env[inpM[1]]=inpM[2]==='int'?parseInt(val)||0:inpM[2]==='float'?parseFloat(val)||0:val;next();});return;}
+    // input() with optional type cast and optional method chains: int(input("...")), input("...").lower(), input("...").strip()
+    // input() with prompt that may contain parens: match by finding the balanced close paren
+    let inpM=null;
+    const _inpRe=/^(\w+)\s*=\s*(int|float|str)?\s*\(?\s*input\s*\(/;
+    if(_inpRe.test(line)){
+      const _m0=line.match(_inpRe);
+      const _start=line.indexOf('input(')+6;
+      let _d=1,_j=_start;
+      while(_j<line.length&&_d>0){if(line[_j]==='(')_d++;else if(line[_j]===')')_d--;_j++;}
+      const _prompt=line.slice(_start,_j-1);
+      const _rest=line.slice(_j).replace(/^\s*\)?\s*/,'');// skip optional outer ) for int(input())
+      const _chain=_rest.match(/^((?:\.[a-z]+\(\))*)\s*$/);
+      if(_chain)inpM=[line,_m0[1],_m0[2]||'',_prompt,_chain[1]||''];
+    }
+    if(inpM){
+      let prompt=inpM[3]?.trim()||'';
+      if(/^["'].*["']$/.test(prompt))prompt=prompt.slice(1,-1);
+      // Handle f-string prompts
+      if(/^f["']/.test(prompt)){prompt=String(evalPy(prompt,env,fnDefs));}
+      const chain=inpM[4]||'';
+      tInput(term,prompt,val=>{
+        let result=inpM[2]==='int'?parseInt(val)||0:inpM[2]==='float'?parseFloat(val)||0:val;
+        // Apply method chains: .lower(), .upper(), .strip(), .title()
+        if(chain){
+          const methods=chain.match(/\.[a-z]+\(\)/g)||[];
+          for(const m2 of methods){
+            if(m2==='.lower()'&&typeof result==='string')result=result.toLowerCase();
+            else if(m2==='.upper()'&&typeof result==='string')result=result.toUpperCase();
+            else if(m2==='.strip()'&&typeof result==='string')result=result.trim();
+            else if(m2==='.title()'&&typeof result==='string')result=result.replace(/\b\w/g,c=>c.toUpperCase());
+          }
+        }
+        env[inpM[1]]=result;next();
+      });return;
+    }
     const frM=line.match(/^for\s+(\w+)\s+in\s+range\(([^)]+)\)\s*:$/);
     if(frM){const args=splitArgs(frM[2]).map(a=>Number(evalPy(a,env,fnDefs)));let st=0,sp=0,step=1;if(args.length===1)sp=args[0];else if(args.length===2){st=args[0];sp=args[1];}else{st=args[0];sp=args[1];step=args[2];}const body=getBlock(stmts,i,s.indent);i+=body.length;let c=st,it=0;function fL(){it++;if(it>1000){tErr(term,'Límite de iteraciones');return next();}if((step>0&&c>=sp)||(step<0&&c<=sp))return next();env[frM[1]]=c;execPy([...body],env,fnDefs,term,()=>{if(env.__break){delete env.__break;return next();}c+=step;fL();});}fL();return;}
     const flM=line.match(/^for\s+(\w+)\s+in\s+(.+)\s*:$/);
@@ -1881,10 +1914,34 @@ function execPy(stmts,env,fnDefs,term,done){
     const wM=line.match(/^while\s+(.+)\s*:$/);
     if(wM){const body=getBlock(stmts,i,s.indent);i+=body.length;let wi=0;function wL(){wi++;if(wi>1000){tErr(term,'Límite de iteraciones');return next();}if(!evalCondPy(wM[1],env,fnDefs))return next();execPy([...body],env,fnDefs,term,()=>{if(env.__break){delete env.__break;return next();}wL();});}wL();return;}
     if(/^if\s+.+:$/.test(line)){
-      const cond=line.slice(3,-1).trim();const body=getBlock(stmts,i,s.indent);i+=body.length;
-      let elseBody=[];
-      while(i<stmts.length&&stmts[i].indent===s.indent&&/^elif\s+|^else:$/.test(stmts[i].code)){const es=stmts[i];i++;const eb=getBlock(stmts,i,s.indent);i+=eb.length;if(es.code==='else:'){elseBody=eb;break;}const ec=es.code.match(/^elif\s+(.+):$/);if(ec&&!evalCondPy(cond,env,fnDefs)&&evalCondPy(ec[1],env,fnDefs)){elseBody=eb;break;}}
-      execPy(evalCondPy(cond,env,fnDefs)?body:elseBody,env,fnDefs,term,next);return;
+      // Collect entire if/elif/else chain
+      const cond=line.slice(3,-1).trim();
+      const body=getBlock(stmts,i,s.indent);i+=body.length;
+      const chain=[];// [{cond,body}] for elif/else
+      while(i<stmts.length&&stmts[i].indent===s.indent&&/^elif\s+|^else:$/.test(stmts[i].code)){
+        const es=stmts[i];i++;
+        const eb=getBlock(stmts,i,s.indent);i+=eb.length;
+        if(es.code==='else:'){chain.push({cond:null,body:eb});break;}
+        const ec=es.code.match(/^elif\s+(.+):$/);
+        if(ec)chain.push({cond:ec[1],body:eb});
+      }
+      // Execute: if true→body, else try each elif, else→else body
+      if(evalCondPy(cond,env,fnDefs)){
+        execPy(body,env,fnDefs,term,next);
+      } else {
+        let ran=false;
+        function tryChainPy(ci){
+          if(ci>=chain.length){if(!ran)next();return;}
+          const br=chain[ci];
+          if(br.cond===null||evalCondPy(br.cond,env,fnDefs)){
+            ran=true;execPy(br.body,env,fnDefs,term,next);
+          } else {
+            tryChainPy(ci+1);
+          }
+        }
+        tryChainPy(0);
+      }
+      return;
     }
     const defM=line.match(/^def\s+(\w+)\s*\(([^)]*)\)\s*:$/);
     if(defM){const body=getBlock(stmts,i,s.indent);i+=body.length;fnDefs[defM[1]]={params:defM[2].split(',').map(p=>p.trim()).filter(Boolean),body};return next();}
@@ -1926,8 +1983,18 @@ function splitTopPy(s,op){
 function evalPy(expr,env,fnDefs){
   if(expr===null||expr===undefined)return null;expr=String(expr).trim();if(!expr)return'';
   if(expr==='None')return null;if(expr==='True')return true;if(expr==='False')return false;
-  if(/^[frFR]["']/.test(expr)){const q=expr[1];let inner=expr.slice(2,-1);inner=inner.replace(/\{([^}]+)\}/g,(_,e2)=>{const v=evalPy(e2.trim(),env,fnDefs);return v===null?'None':v===true?'True':v===false?'False':Array.isArray(v)?'['+v.join(', ')+']':String(v);});return inner;}
-  if(/^["']/.test(expr)&&expr.endsWith(expr[0]))return expr.slice(1,-1);
+  if(/^[frFR]["']/.test(expr)){
+    const q=expr[1];let inner=expr.slice(2,-1);
+    // Process escape sequences FIRST
+    inner=inner.replace(/\\n/g,'\n').replace(/\\t/g,'\t').replace(/\\r/g,'\r').replace(/\\\\/g,'\\');
+    // Then interpolate {expr}
+    inner=inner.replace(/\{([^}]+)\}/g,(_,e2)=>{
+      const v=evalPy(e2.trim(),env,fnDefs);
+      return v===null?'None':v===true?'True':v===false?'False':Array.isArray(v)?'['+v.map(x=>typeof x==='string'?x:String(x)).join(', ')+']':typeof v==='number'&&!Number.isInteger(v)?parseFloat(v.toFixed(8)).toString():String(v);
+    });
+    return inner;
+  }
+  if(/^["']/.test(expr)&&expr.endsWith(expr[0]))return expr.slice(1,-1).replace(/\\n/g,'\n').replace(/\\t/g,'\t').replace(/\\\\/g,'\\');
   if(expr.startsWith('[')&&expr.endsWith(']')){const inner=expr.slice(1,-1).trim();return inner?splitArgs(inner).map(a=>evalPy(a,env,fnDefs)):[];}
   if(expr.startsWith('{')&&expr.endsWith('}')){const inner=expr.slice(1,-1).trim();const d={};if(inner)splitArgs(inner).forEach(pair=>{const ci=pair.indexOf(':');if(ci>-1)d[evalPy(pair.slice(0,ci).trim(),env,fnDefs)]=evalPy(pair.slice(ci+1).trim(),env,fnDefs);});return d;}
   if(/^-?[\d.]+$/.test(expr))return parseFloat(expr);
@@ -1982,7 +2049,44 @@ function evalPy(expr,env,fnDefs){
 
   try{let safe=expr.replace(/\b([a-zA-Z_]\w*)\b/g,m=>{if(PY_KW.has(m)||PY_CN.has(m))return m;if(env[m]!==undefined){const v=env[m];return typeof v==='string'?JSON.stringify(v):Array.isArray(v)?JSON.stringify(v):String(v);}return'0';}).replace(/\band\b/g,'&&').replace(/\bor\b/g,'||').replace(/\bnot\b/g,'!').replace(/True/g,'true').replace(/False/g,'false').replace(/None/g,'null');return Function('"use strict";return('+safe+')')();}catch(e){return 0;}
 }
-function evalCondPy(cond,env,fnDefs){cond=cond.trim();if(cond.startsWith('not '))return!evalCondPy(cond.slice(4).trim(),env,fnDefs);if(cond.includes(' and '))return cond.split(' and ').every(c=>evalCondPy(c.trim(),env,fnDefs));if(cond.includes(' or '))return cond.split(' or ').some(c=>evalCondPy(c.trim(),env,fnDefs));for(const[op,fn]of[['in',a=>Array.isArray(a[1])?a[1].includes(a[0]):String(a[1]).includes(String(a[0]))],['<=',a=>a[0]<=a[1]],['>=',a=>a[0]>=a[1]],['!=',a=>a[0]!=a[1]],['==',a=>a[0]==a[1]],['<',a=>Number(a[0])<Number(a[1])],['>',a=>Number(a[0])>Number(a[1])]]){const idx=cond.indexOf(op);if(idx>0){const a=evalPy(cond.slice(0,idx).trim(),env,fnDefs),b=evalPy(cond.slice(idx+op.length).trim(),env,fnDefs);return fn([a,b]);}}const v=evalPy(cond,env,fnDefs);return v!==null&&v!==false&&v!==0&&v!==''&&!(Array.isArray(v)&&v.length===0);}
+function evalCondPy(cond,env,fnDefs){
+  cond=cond.trim();
+  // Strip outer parens
+  while(cond.startsWith('(')&&cond.endsWith(')')){
+    let d=0,ok=true;
+    for(let k=0;k<cond.length;k++){if(cond[k]==='(')d++;else if(cond[k]===')'){d--;if(d===0&&k<cond.length-1){ok=false;break;}}}
+    if(ok)cond=cond.slice(1,-1).trim();else break;
+  }
+  if(cond.startsWith('not '))return!evalCondPy(cond.slice(4).trim(),env,fnDefs);
+  // Depth-aware split for 'and' / 'or'
+  const andParts=splitTopPy(cond,' and ');
+  if(andParts.length>1)return andParts.every(c=>evalCondPy(c.trim(),env,fnDefs));
+  const orParts=splitTopPy(cond,' or ');
+  if(orParts.length>1)return orParts.some(c=>evalCondPy(c.trim(),env,fnDefs));
+  // Comparison operators (longest first to avoid partial matches)
+  for(const[op,fn]of[
+    ['not in',a=>Array.isArray(a[1])?!a[1].includes(a[0]):!String(a[1]).includes(String(a[0]))],
+    ['in',    a=>Array.isArray(a[1])?a[1].includes(a[0]):String(a[1]).includes(String(a[0]))],
+    ['is not',a=>a[0]!==a[1]],
+    ['is',    a=>a[0]===a[1]],
+    ['<=',    a=>Number(a[0])<=Number(a[1])],
+    ['>=',    a=>Number(a[0])>=Number(a[1])],
+    ['!=',    a=>String(a[0])!==String(a[1])],
+    ['==',    a=>String(a[0])===String(a[1])],
+    ['<',     a=>Number(a[0])<Number(a[1])],
+    ['>',     a=>Number(a[0])>Number(a[1])],
+  ]){
+    // Find operator outside of strings/parens
+    const parts=splitTopPy(cond,op);
+    if(parts.length===2){
+      const a=evalPy(parts[0].trim(),env,fnDefs);
+      const b=evalPy(parts[1].trim(),env,fnDefs);
+      return fn([a,b]);
+    }
+  }
+  const v=evalPy(cond,env,fnDefs);
+  return v!==null&&v!==false&&v!==0&&v!==''&&!(Array.isArray(v)&&v.length===0);
+}
 
 
 // ════════════════════════════════════════
