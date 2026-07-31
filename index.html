@@ -202,9 +202,9 @@ input,select,textarea,button{font-family:var(--font);font-size:17px;color:var(--
 .editor-ver{font-size:17px;color:var(--text3);}
 .code-editor-body{display:flex;flex-direction:row;height:494px;max-height:494px;overflow:hidden;background:#1e1e1e;}
 .line-numbers{padding:14px 6px 14px 10px;font-size:15px;line-height:24px;color:#4a5568;text-align:right;user-select:none;width:42px;min-width:42px;max-width:42px;overflow:hidden;scrollbar-width:none;background:#1a1a2e;white-space:pre;flex-shrink:0;display:block;align-self:stretch;border-right:1px solid rgba(255,255,255,0.06);}
-.code-area{flex:1;position:relative;overflow:hidden;min-width:0;height:100%;}
-.code-highlight{position:absolute;top:0;left:0;right:0;bottom:0;padding:14px 14px 14px 14px;font-size:15px;line-height:24px;pointer-events:none;white-space:pre;overflow:auto;font-family:'Fira Code',monospace,monospace;tab-size:2;-moz-tab-size:2;scrollbar-width:none;}
-.code-textarea{position:absolute;top:0;left:0;right:0;bottom:0;padding:14px 14px 14px 14px;font-size:15px;line-height:24px;background:transparent;border:none;outline:none;resize:none;color:transparent;caret-color:#fff;white-space:pre;overflow:auto;font-family:'Fira Code',monospace,monospace;z-index:1;tab-size:2;-moz-tab-size:2;}
+.code-area{flex:1;position:relative;overflow:auto;min-width:0;height:100%;scrollbar-width:thin;scrollbar-color:#333 transparent;}
+.code-highlight{position:relative;padding:14px;font-size:15px;line-height:24px;pointer-events:none;white-space:pre;overflow:visible;font-family:'Fira Code',monospace,monospace;tab-size:2;-moz-tab-size:2;min-width:100%;box-sizing:border-box;display:block;}
+.code-textarea{position:absolute;top:0;left:0;right:0;bottom:0;padding:14px;font-size:15px;line-height:24px;background:transparent;border:none;outline:none;resize:none;color:transparent;caret-color:#fff;white-space:pre;overflow:hidden;font-family:'Fira Code',monospace,monospace;z-index:1;tab-size:2;-moz-tab-size:2;min-width:100%;box-sizing:border-box;}
 .run-btn{background:rgba(0,180,255,0.14);border:1px solid rgba(0,180,255,0.38);color:var(--accent);padding:9px 18px;border-radius:8px 0 0 8px;cursor:pointer;font-size:18px;font-family:var(--font);font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
 .run-btn:hover{background:rgba(0,180,255,0.26);}
 .clear-btn{background:var(--surface2);border:1px solid rgba(0,180,255,0.1);border-left:none;color:var(--text2);padding:9px 14px;cursor:pointer;font-size:17px;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;transition:all .15s;border-radius:0;}
@@ -287,6 +287,8 @@ input[type="date"]{color-scheme:dark;}
 .topbar-divider{width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 4px;flex-shrink:0;}
 
 .code-highlight::-webkit-scrollbar{display:none;}
+
+.code-scroll-inner{position:relative;min-height:100%;width:max-content;min-width:100%;}
 </style>
 </head>
 <body>
@@ -1458,9 +1460,11 @@ function buildEditor(mountId,lang,filename,version){
       </div>
       <div class="code-editor-body">
         <div class="line-numbers" id="ln-${mountId}">1</div>
-        <div class="code-area">
-          <div class="code-highlight" id="hl-${mountId}"></div>
-          <textarea class="code-textarea" id="ta-${mountId}" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-lang="${lang}"></textarea>
+        <div class="code-area" id="ca-${mountId}">
+          <div class="code-scroll-inner" id="si-${mountId}">
+            <div class="code-highlight" id="hl-${mountId}"></div>
+            <textarea class="code-textarea" id="ta-${mountId}" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-lang="${lang}"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -1492,22 +1496,23 @@ function buildEditor(mountId,lang,filename,version){
   // ── Highlight & line-numbers sync (NO scrollTop here — only in scroll listener) ──
   function doHL(){
     const code=ta.value;
-    // Build highlighted HTML — each line wrapped for proper height
     hl.innerHTML=HL(code);
     const lineCount=code.split('\n').length;
     lnEl.textContent=Array.from({length:lineCount},(_,i)=>i+1).join('\n');
-    // Critical: sync scroll AFTER DOM update so heights are correct
     requestAnimationFrame(()=>{
-      hl.scrollTop=ta.scrollTop;
-      hl.scrollLeft=ta.scrollLeft;
-      lnEl.scrollTop=ta.scrollTop;
+      // hl is position:relative — it sets the scroll height naturally
+      // ta must match hl's rendered height for perfect cursor alignment
+      const hlH=hl.scrollHeight||lineCount*24+28;
+      ta.style.height=hlH+'px';
+      const ca=document.getElementById('ca-'+mountId);
+      if(ca)lnEl.scrollTop=ca.scrollTop;
     });
   }
 
   function syncScroll(){
-    hl.scrollTop=ta.scrollTop;
-    hl.scrollLeft=ta.scrollLeft;
-    lnEl.scrollTop=ta.scrollTop;
+    // Only line numbers need scroll sync — code-area handles hl+ta scroll naturally
+    const ca=document.getElementById('ca-'+mountId);
+    if(ca)lnEl.scrollTop=ca.scrollTop;
   }
 
   function updCur(){
@@ -1536,8 +1541,11 @@ function buildEditor(mountId,lang,filename,version){
   doHL();
 
   ta.addEventListener('input',()=>{doHL();autoSave();});
-  ta.addEventListener('keydown',()=>{requestAnimationFrame(syncScroll);});
-  ta.addEventListener('scroll',syncScroll);
+  // keydown sync removed — code-area handles scroll
+  // Scroll code-area syncs line numbers
+  const caEl=document.getElementById('ca-'+mountId);
+  if(caEl)caEl.addEventListener('scroll',syncScroll);
+  // Remove textarea scroll (it's overflow:hidden now)
   ta.addEventListener('click',updCur);
   ta.addEventListener('keyup',updCur);
   if(pnEl) pnEl.addEventListener('input',autoSave);
