@@ -454,9 +454,16 @@ let _fbReady=false;
 // FIREBASE
 // ════════════════════════════════════════
 async function saveAll(){
-  document.getElementById('saving-ind').classList.add('show');
-  await set(ref(db,PATH),{questions,replies,grades,attendance,sessions,codeSubmissions,config});
-  setTimeout(()=>document.getElementById('saving-ind').classList.remove('show'),800);
+  const ind=document.getElementById('saving-ind');
+  if(ind)ind.classList.add('show');
+  try{
+    await set(ref(db,PATH),{questions,replies,grades,attendance,sessions,codeSubmissions,config});
+  }catch(e){
+    console.error('saveAll error:',e);
+    toast('Error al guardar: '+e.message);
+  }finally{
+    setTimeout(()=>{if(ind)ind.classList.remove('show');},800);
+  }
 }
 
 async function loadAll(){
@@ -1693,6 +1700,9 @@ function buildEditor(mountId,lang,filename,version){
     saveAll().then(()=>{
       toast('Enviado: "'+name+'" → '+activeSess.label);
       celebrate('📤','¡Código enviado!','Tu proyecto "'+name+'" fue enviado a '+activeSess.label);
+    }).catch(e=>{
+      console.error('Submit save error:',e);
+      toast('Error al enviar código: '+e.message);
     });
   });
 
